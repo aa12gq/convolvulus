@@ -814,7 +814,11 @@ const openRecover = (row) => {
 
 // 通用的下载文件函数
 
-const downloadFile = async(downloadFunc, row, delay = 3000) => {
+// 通用的下载文件函数
+const downloadFile = async(downloadFunc, row) => {
+  // 显示准备下载的消息
+  ElMessage.info('准备下载，请稍候...')
+
   try {
     const response = await downloadFunc(row.ID)
     if (response && response.data) {
@@ -833,21 +837,18 @@ const downloadFile = async(downloadFunc, row, delay = 3000) => {
       console.log(`开始下载 ${fileName}`, response)
       const blob = new Blob([response.data], { type: 'text/plain' })
 
-      // 显示准备下载的消息
-      ElMessage.info('准备下载，请稍候...')
+      // 创建下载链接并模拟点击进行下载
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', fileName)
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
 
-      setTimeout(() => {
-        // 延迟下载
-        const url = window.URL.createObjectURL(blob)
-        const link = document.createElement('a')
-        link.href = url
-        link.setAttribute('download', fileName)
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        window.URL.revokeObjectURL(url)
-        ElMessage.success('下载成功')
-      }, delay)
+      // 下载成功提示
+      ElMessage.success('下载成功')
     } else {
       ElMessage.error('下载失败：服务器未返回文件')
     }
