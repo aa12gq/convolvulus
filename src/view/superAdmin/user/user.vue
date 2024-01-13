@@ -207,6 +207,18 @@
             <el-input v-model="userInfo.email" />
           </el-form-item>
           <el-form-item
+            label="并发限制"
+            prop="concurrencyLimit"
+          >
+            <el-input v-model.number="userInfo.concurrencyLimit" />
+          </el-form-item>
+          <el-form-item
+            label="当前使用并发数"
+            prop="currentConcurrency"
+          >
+            <el-input v-model.number="userInfo.currentConcurrency" />
+          </el-form-item>
+          <el-form-item
             label="用户角色"
             prop="authorityId"
           >
@@ -272,7 +284,6 @@
     />
   </div>
 </template>
-
 
 <script setup>
 
@@ -420,6 +431,8 @@ const userInfo = ref({
   authorityId: '',
   authorityIds: [],
   enable: 1,
+  concurrencyLimit: 0,
+  currentConcurrency: 0,
 })
 
 const rules = ref({

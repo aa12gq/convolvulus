@@ -133,8 +133,7 @@
           class="admin-box"
         >
           <div
-            v-loading="loadingFlag"
-            element-loading-text="努力加载中..."
+           
           >
             <transition
               mode="out-in"

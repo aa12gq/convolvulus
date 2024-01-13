@@ -80,7 +80,6 @@ export const downloadNormalAccounts = (taskId) => {
   })
 }
 
-
 export const downloadInvalidAccounts = (taskId) => {
   return service({
     url: `/sievenNumber/downloadInvalidAccounts/${String(taskId)}`,
@@ -89,10 +88,17 @@ export const downloadInvalidAccounts = (taskId) => {
   })
 }
 
-
 export const downloadAllAccounts = (taskId) => {
   return service({
-    url: `/sievenNumber/downloadAllAccounts/${String(taskId)}`,
+    url: `/sievenNumber/downloadAccounts/${String(taskId)}`,
+    method: 'get',
+    responseType: 'blob', // 确保响应类型为 blob，这样才能处理文件流
+  })
+}
+
+export const downloadFailedAccounts = (taskId) => {
+  return service({
+    url: `/sievenNumber/downloadFailedAccounts/${String(taskId)}`,
     method: 'get',
     responseType: 'blob', // 确保响应类型为 blob，这样才能处理文件流
   })

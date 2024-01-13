@@ -299,6 +299,9 @@
                     <el-dropdown-item
                       @click="downloadAll(scope.row)"
                     >下载正常及封禁账号</el-dropdown-item>
+                    <el-dropdown-item
+                      @click="downloadFailed(scope.row)"
+                    >下载检测失败账号</el-dropdown-item>
                   </el-dropdown-menu>
                 </template>
               </el-dropdown>
@@ -441,6 +444,7 @@ import {
   downloadNormalAccounts,
   downloadInvalidAccounts,
   downloadAllAccounts,
+  downloadFailedAccounts,
 } from '@/api/sieve'
 import {
   getAvailableConcurrency,
@@ -878,6 +882,10 @@ const downloadInvalid = async(row) => {
 // 下载存活账号
 const downloadAll = async(row) => {
   await downloadFile(downloadAllAccounts, row)
+}
+
+const downloadFailed = async(row) => {
+  await downloadFile(downloadFailedAccounts, row)
 }
 
 const concurrencyInfo = ref({

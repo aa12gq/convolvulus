@@ -12,7 +12,7 @@
                 <a href="">
                   <img
                     class="org-img dom-center"
-                    src="@/assets/logo.png"
+                    src="@/assets/logojun.svg"
                     alt="gin-vue-admin"
                   />
                 </a>
@@ -23,7 +23,7 @@
                 <a href="">
                   <img
                     class="dom-center"
-                    src="https://img.shields.io/github/watchers/flipped-aurora/gin-vue-admin.svg?label=Watch"
+                    src="@/assets/logojun.svg"
                     alt=""
                   />
                 </a>
@@ -32,7 +32,7 @@
                 <a href="">
                   <img
                     class="dom-center"
-                    src="https://img.shields.io/github/stars/flipped-aurora/gin-vue-admin.svg?style=social"
+                    src="@/assets/logojun.svg"
                     alt=""
                   />
                 </a>
@@ -41,7 +41,7 @@
                 <a href="">
                   <img
                     class="dom-center"
-                    src="https://img.shields.io/github/forks/flipped-aurora/gin-vue-admin.svg?label=Fork"
+                    src="@/assets/logojun.svg"
                     alt=""
                   />
                 </a>
