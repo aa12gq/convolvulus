@@ -27,7 +27,6 @@
         </div>
         <!-- 搜索框区域 -->
         <div class="search-section flex space-x-4 -ml-2">
-
           <a-input-search
             v-model:value="searchText"
             placeholder="请输入任务名称进行搜索"
@@ -47,27 +46,41 @@
             @click="searchTask"
           >查询</a-button> -->
           <Button
-            class=" mr-4"
+            class="mr-4"
             type="primary"
-            @click="()=>{
-              openDialog('add')
-              RefreshAvailableConcurrency()
-            }"
+            @click="
+              () => {
+                openDialog('add');
+                RefreshAvailableConcurrency();
+              }
+            "
           >添加任务</Button>
-
         </div>
+
+        <Button
+          type="primary"
+          :disabled="multipleSelection.length == 0"
+          @click="batchPause()"
+        >
+          批量暂停
+        </Button>
+        <Button
+          type="primary"
+          :disabled="multipleSelection.length == 0"
+          @click="batchRecover()"
+        >
+          批量恢复
+        </Button>
         <Button
           type="primary"
           danger
+          :disabled="multipleSelection.length == 0"
           @click="batchDelete()"
-        >
-          批量删除
-        </Button>
+        > 批量删除 </Button>
         <Button
           type="dashed"
           @click="getTableData"
         >刷新一下</Button>
-
       </div>
 
       <!-- <a-table
@@ -106,7 +119,6 @@
         :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
         style="width: 100%"
         stripe
-
         :summary-method="customSummary"
         @sort-change="handleSortChange"
         @selection-change="handleSelectionChange"
@@ -117,7 +129,9 @@
         />
         <el-table-column
           type="index"
+          label="ID"
           width="100"
+          prop="ID"
         />
         <el-table-column
           align="left"
@@ -138,7 +152,13 @@
               :content="scope.row.file_name"
               placement="top"
             >
-              <div class="text-ellipsis">{{ scope.row.file_name.length > 10 ? scope.row.file_name.substr(0, 10) + '...' : scope.row.file_name }}</div>
+              <div class="text-ellipsis">
+                {{
+                  scope.row.file_name.length > 10
+                    ? scope.row.file_name.substr(0, 10) + "..."
+                    : scope.row.file_name
+                }}
+              </div>
             </el-tooltip>
           </template>
         </el-table-column>
@@ -164,7 +184,9 @@
           <template #default="{ row }">
             {{ row.nonDisabledAccounts }}
             <span v-if="row.totalNumber > 0">
-              ({{ Math.round((row.nonDisabledAccounts / row.totalNumber) * 100) }}%)
+              ({{
+                Math.round((row.nonDisabledAccounts / row.totalNumber) * 100)
+              }}%)
             </span>
             <span v-else> (0%) </span>
           </template>
@@ -179,7 +201,9 @@
           <template #default="{ row }">
             {{ row.disabledAccounts }}
             <span v-if="row.totalNumber > 0">
-              ({{ Math.round((row.disabledAccounts / row.totalNumber) * 100) }}%)
+              ({{
+                Math.round((row.disabledAccounts / row.totalNumber) * 100)
+              }}%)
             </span>
             <span v-else>0%</span>
           </template>
@@ -256,7 +280,7 @@
               <el-button
                 type="danger"
                 link
-                :disabled="scope.row.status=='Running'"
+                :disabled="scope.row.status == 'Running'"
                 @click="deleteTask(scope.row)"
               >删除</el-button>
 
@@ -298,12 +322,8 @@
                       v-if="scope.row.invalidAccounts > 1"
                       @click="downloadInvalid(scope.row)"
                     >下载无效账号</el-dropdown-item>
-                    <el-dropdown-item
-                      @click="downloadAll(scope.row)"
-                    >下载正常及封禁账号</el-dropdown-item>
-                    <el-dropdown-item
-                      @click="downloadFailed(scope.row)"
-                    >下载检测失败账号</el-dropdown-item>
+                    <el-dropdown-item @click="downloadAll(scope.row)">下载正常及封禁账号</el-dropdown-item>
+                    <el-dropdown-item @click="downloadFailed(scope.row)">下载检测失败账号</el-dropdown-item>
                   </el-dropdown-menu>
                 </template>
               </el-dropdown>
@@ -329,7 +349,6 @@
       :close-on-click-modal="false"
       draggable
     >
-
       <el-form
         ref="formRef"
         :model="form"
@@ -376,15 +395,13 @@
             :max="1000"
             style="width: 100%"
           />
-          <span
-            class="text-sm text-orange-300 mt-2 "
-          >当前可用并发数{{
+          <span class="text-sm text-orange-300 mt-2">当前可用并发数{{
             concurrencyInfo.concurrencyLimit -
               concurrencyInfo.currentConcurrency
           }}</span>
           <el-icon
             class="mt-2 cursor-pointer"
-            :class="{ 'rotate': isRefreshing }"
+            :class="{ rotate: isRefreshing }"
             style="margin-left: 4px"
             :size="12"
             @click="RefreshAvailableConcurrency()"
@@ -431,7 +448,6 @@
         </el-form-item>
       </el-form>
     </el-dialog>
-
   </div>
 </template>
 
@@ -448,9 +464,7 @@ import {
   downloadAllAccounts,
   downloadFailedAccounts,
 } from '@/api/sieve'
-import {
-  getAvailableConcurrency,
-} from '@/api/user'
+import { getAvailableConcurrency } from '@/api/user'
 import { getCountryInfoList } from '@/api/country'
 import { formatTimeToStr } from '@/utils/date'
 import { ref, reactive, onMounted } from 'vue'
@@ -589,8 +603,13 @@ const getStatusButtonType = (status, row) => {
     case 'Running':
       // 计算总进度百分比
       if (row.totalNumber > 0) {
-        const totalProcessed = Number(row.nonDisabledAccounts) + Number(row.disabledAccounts) + Number(row.invalidAccounts)
-        const totalProgress = Math.floor((totalProcessed / Number(row.totalNumber)) * 100)
+        const totalProcessed =
+          Number(row.nonDisabledAccounts) +
+          Number(row.disabledAccounts) +
+          Number(row.invalidAccounts)
+        const totalProgress = Math.floor(
+          (totalProcessed / Number(row.totalNumber)) * 100
+        )
         return `运行中 ( ${totalProgress}%)`
       }
       return '运行中'
@@ -660,7 +679,9 @@ const form = reactive({
   country_id: null,
 })
 
-onMounted(() => { initForm() })
+onMounted(() => {
+  initForm()
+})
 
 const initForm = () => {
   refreshCountryInfoList()
@@ -678,7 +699,9 @@ const initForm = () => {
 const rules = {
   taskName: [{ required: true, message: '请输入任务名称', trigger: 'blur' }],
   file: [{ required: true, message: '请上传文件', trigger: 'change' }],
-  country_id: [{ required: true, message: '请选择国家区号', trigger: 'change' }],
+  country_id: [
+    { required: true, message: '请选择国家区号', trigger: 'change' },
+  ],
   concurrency: [
     { required: true, message: '请输入并发数', trigger: 'blur' },
     { type: 'number', message: '并发数必须为数字值', trigger: 'blur' },
@@ -704,7 +727,8 @@ const submitForm = async() => {
     if (response && response.code === 0) {
       closeDialog()
       ElMessage.success('提交成功！')
-      concurrencyInfo.value.currentConcurrency = concurrencyInfo.value.currentConcurrency - form.concurrency
+      concurrencyInfo.value.currentConcurrency =
+        concurrencyInfo.value.currentConcurrency - form.concurrency
       setTimeout(() => {
         getTableData()
       }, 500)
@@ -841,8 +865,9 @@ const downloadFile = async(downloadFunc, row) => {
       let fileName = 'download.txt' // 默认文件名
 
       if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(/filename\*?=UTF-8''(.+?)(;|$)/) ||
-                              contentDisposition.match(/filename="?(.+?)"?(;|$)/)
+        const filenameMatch =
+          contentDisposition.match(/filename\*?=UTF-8''(.+?)(;|$)/) ||
+          contentDisposition.match(/filename="?(.+?)"?(;|$)/)
         if (filenameMatch && filenameMatch.length > 1) {
           fileName = decodeURIComponent(filenameMatch[1])
         }
@@ -868,7 +893,10 @@ const downloadFile = async(downloadFunc, row) => {
     }
   } catch (error) {
     // 显示具体的错误信息
-    const errorMessage = error.response && error.response.data ? error.response.data.message : '下载出错'
+    const errorMessage =
+      error.response && error.response.data
+        ? error.response.data.message
+        : '下载出错'
     ElMessage.error(errorMessage)
     console.error('下载出错', error)
   }
@@ -900,7 +928,7 @@ const downloadFailed = async(row) => {
 
 const concurrencyInfo = ref({
   concurrencyLimit: 0,
-  currentConcurrency: 0
+  currentConcurrency: 0,
 })
 
 const RefreshAvailableConcurrency = async() => {
@@ -924,8 +952,12 @@ const customSummary = (param) => {
     }
 
     // 只对特定的列进行合计
-    if (['nonDisabledAccounts', 'disabledAccounts', 'totalNumber'].includes(column.property)) {
-      const values = data.map(item => Number(item[column.property]))
+    if (
+      ['nonDisabledAccounts', 'disabledAccounts', 'totalNumber'].includes(
+        column.property
+      )
+    ) {
+      const values = data.map((item) => Number(item[column.property]))
       sums[index] = values.reduce((prev, curr) => {
         const value = Number(curr)
         return !isNaN(value) ? prev + curr : prev
@@ -978,8 +1010,20 @@ const openDialog = (key) => {
 }
 
 const columns = [
-  { title: '序号', width: 100, dataIndex: 'index', key: 'index', fixed: 'left' },
-  { title: '任务名称', width: 100, dataIndex: 'taskName', key: 'taskName', fixed: 'left' },
+  {
+    title: '序号',
+    width: 100,
+    dataIndex: 'index',
+    key: 'index',
+    fixed: 'left',
+  },
+  {
+    title: '任务名称',
+    width: 100,
+    dataIndex: 'taskName',
+    key: 'taskName',
+    fixed: 'left',
+  },
   { title: '文件名称', dataIndex: 'file_name', key: '1' },
   { title: '状态', dataIndex: 'status', key: 'status' },
   { title: '正常', dataIndex: 'nonDisabledAccounts', key: '3' },
@@ -994,7 +1038,7 @@ const columns = [
     key: 'operation',
     fixed: 'right',
     width: 180,
-    scopedSlots: { customRender: 'operation' }
+    scopedSlots: { customRender: 'operation' },
   },
 ]
 
@@ -1031,9 +1075,9 @@ const batchDelete = () => {
     type: 'warning',
   })
     .then(() => {
-    // 用户点击了确定按钮，执行删除操作
-      multipleSelection.value.forEach(async row => {
-      // 只有当状态不是Running时，才调用删除接口
+      // 用户点击了确定按钮，执行删除操作
+      multipleSelection.value.forEach(async(row) => {
+        // 只有当状态不是Running时，才调用删除接口
         if (row.status !== 'Running') {
           // 调用删除任务的函数
           const res = await deleteSieveTask({ ID: row.ID })
@@ -1052,8 +1096,72 @@ const batchDelete = () => {
       })
     })
     .catch(() => {
-    // 用户点击了取消按钮
+      // 用户点击了取消按钮
       message.warning('已取消批量删除')
+    })
+}
+
+const batchRecover = () => {
+  // 显示确认对话框
+  ElMessageBox.confirm('确认要暂停选中的行数据吗？', '批量暂停', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  })
+    .then(() => {
+      // 用户点击了确定按钮，执行删除操作
+      multipleSelection.value.forEach(async(row) => {
+        // 只有当状态不是Running时，才调用删除接口
+        if (row.status === 'Running') {
+          // 调用删除任务的函数
+          const res = await pauseTask(row.ID)
+          if (res.code === 0) {
+            message.success('任务暂停成功!')
+            if (tableData.value.length === 1 && page.value > 1) {
+              page.value--
+            }
+            getTableData()
+            // 当删除后没有运行中的任务时，停止自动刷新
+            if (!tableData.value.some((item) => item.status === 'Running')) {
+              stopAutoRefresh()
+            }
+          }
+        }
+      })
+    })
+    .catch(() => {
+      // 用户点击了取消按钮
+      message.warning('已取消批量暂停')
+    })
+}
+
+const batchPause = () => {
+  // 显示确认对话框
+  ElMessageBox.confirm('确认要暂停选中的行数据吗？', '批量暂停', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  })
+    .then(() => {
+      // 用户点击了确定按钮，执行删除操作
+      multipleSelection.value.forEach(async(row) => {
+        // 只有当状态不是Running时，才调用删除接口
+        if (row.status === 'Pause') {
+          // 调用删除任务的函数
+          const res = await recoverTask(row.ID)
+          if (res.code === 0) {
+            message.success('任务恢复成功!')
+            if (tableData.value.length === 1 && page.value > 1) {
+              page.value--
+            }
+            getTableData()
+          }
+        }
+      })
+    })
+    .catch(() => {
+      // 用户点击了取消按钮
+      message.warning('已取消批量恢复')
     })
 }
 </script>
