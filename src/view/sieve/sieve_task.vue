@@ -46,20 +46,27 @@
             type="primary"
             @click="searchTask"
           >查询</a-button> -->
-          <a-button
+          <Button
             class=" mr-4"
             type="primary"
             @click="()=>{
               openDialog('add')
               RefreshAvailableConcurrency()
             }"
-          >添加任务</a-button>
+          >添加任务</Button>
 
         </div>
-        <a-button
+        <Button
+          type="primary"
+          danger
+          @click="batchDelete()"
+        >
+          批量删除
+        </Button>
+        <Button
           type="dashed"
           @click="getTableData"
-        >刷新一下</a-button>
+        >刷新一下</Button>
 
       </div>
 
@@ -94,6 +101,7 @@
       </a-table> -->
 
       <el-table
+        ref="multipleTableRef"
         :data="tableData"
         :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
         style="width: 100%"
@@ -101,7 +109,12 @@
 
         :summary-method="customSummary"
         @sort-change="handleSortChange"
+        @selection-change="handleSelectionChange"
       >
+        <el-table-column
+          type="selection"
+          width="55"
+        />
         <el-table-column
           type="index"
           width="100"
@@ -136,7 +149,9 @@
           min-width="180"
         >
           <template #default="{ row }">
-            <a-tag :color="getStatusTag(row.status)">{{ getStatusButtonType(row.status) }}</a-tag>
+            <a-tag :color="getStatusTag(row.status)">
+              {{ getStatusButtonType(row.status, row) }}
+            </a-tag>
           </template>
         </el-table-column>
 
@@ -148,17 +163,13 @@
         >
           <template #default="{ row }">
             {{ row.nonDisabledAccounts }}
-            <span v-if="row.nonDisabledAccounts + row.disabledAccounts > 0">
-              ({{
-                Math.floor(
-                  (Number(row.nonDisabledAccounts) / Number(row.totalNumber)) *
-                    100
-                )
-              }}%)
+            <span v-if="row.totalNumber > 0">
+              ({{ Math.round((row.nonDisabledAccounts / row.totalNumber) * 100) }}%)
             </span>
             <span v-else> (0%) </span>
           </template>
         </el-table-column>
+
         <el-table-column
           align="left"
           label="封禁"
@@ -168,16 +179,12 @@
           <template #default="{ row }">
             {{ row.disabledAccounts }}
             <span v-if="row.totalNumber > 0">
-              ({{
-                Math.floor(
-                  ((row.disabledAccounts / row.totalNumber) * 100).toFixed(2),
-                  100
-                )
-              }}%)
+              ({{ Math.round((row.disabledAccounts / row.totalNumber) * 100) }}%)
             </span>
             <span v-else>0%</span>
           </template>
         </el-table-column>
+
         <el-table-column
           align="left"
           label="无效"
@@ -187,12 +194,7 @@
           <template #default="{ row }">
             {{ row.invalidAccounts }}
             <span v-if="row.totalNumber > 0">
-              ({{
-                Math.floor(
-                  ((row.invalidAccounts / row.totalNumber) * 100).toFixed(2),
-                  100
-                )
-              }}%)
+              ({{ Math.round((row.invalidAccounts / row.totalNumber) * 100) }}%)
             </span>
             <span v-else>0%</span>
           </template>
@@ -454,6 +456,7 @@ import { formatTimeToStr } from '@/utils/date'
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { message } from 'ant-design-vue'
+import { Button } from 'ant-design-vue'
 
 const handleClose = () => {
   drawer.value = false
@@ -573,7 +576,7 @@ const deleteTask = (row) => {
     })
 }
 
-const getStatusButtonType = (status) => {
+const getStatusButtonType = (status, row) => {
   switch (status) {
     case 'Init':
       return '初始化'
@@ -584,6 +587,12 @@ const getStatusButtonType = (status) => {
     case 'Failed':
       return '失败'
     case 'Running':
+      // 计算总进度百分比
+      if (row.totalNumber > 0) {
+        const totalProcessed = Number(row.nonDisabledAccounts) + Number(row.disabledAccounts) + Number(row.invalidAccounts)
+        const totalProgress = Math.floor((totalProcessed / Number(row.totalNumber)) * 100)
+        return `运行中 ( ${totalProgress}%)`
+      }
       return '运行中'
     case 'Pause':
       return '暂停'
@@ -591,6 +600,7 @@ const getStatusButtonType = (status) => {
       return ''
   }
 }
+
 const getButtonType = (status) => {
   switch (status) {
     case 'Init':
@@ -1005,6 +1015,46 @@ const getStatusTag = (status) => {
     default:
       return ''
   }
+}
+
+const multipleTableRef = ref(null)
+const multipleSelection = ref([])
+const handleSelectionChange = (val) => {
+  multipleSelection.value = val
+}
+
+const batchDelete = () => {
+  // 显示确认对话框
+  ElMessageBox.confirm('确认要删除选中的行数据吗？', '批量删除', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  })
+    .then(() => {
+    // 用户点击了确定按钮，执行删除操作
+      multipleSelection.value.forEach(async row => {
+      // 只有当状态不是Running时，才调用删除接口
+        if (row.status !== 'Running') {
+          // 调用删除任务的函数
+          const res = await deleteSieveTask({ ID: row.ID })
+          if (res.code === 0) {
+            message.success('任务删除成功!')
+            if (tableData.value.length === 1 && page.value > 1) {
+              page.value--
+            }
+            getTableData()
+            // 当删除后没有运行中的任务时，停止自动刷新
+            if (!tableData.value.some((item) => item.status === 'Running')) {
+              stopAutoRefresh()
+            }
+          }
+        }
+      })
+    })
+    .catch(() => {
+    // 用户点击了取消按钮
+      message.warning('已取消批量删除')
+    })
 }
 </script>
 

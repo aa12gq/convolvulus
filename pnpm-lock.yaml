@@ -32,6 +32,9 @@ dependencies:
   core-js:
     specifier: ^3.31.1
     version: registry.npmmirror.com/core-js@3.31.1
+  css:
+    specifier: link:ant-design-vue/es/button/style/css
+    version: link:ant-design-vue/es/button/style/css
   echarts:
     specifier: 5.4.3
     version: registry.npmmirror.com/echarts@5.4.3

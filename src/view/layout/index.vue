@@ -1,8 +1,14 @@
 <template>
   <el-container class="layout-cont">
-    <el-container :class="[isSider ? 'openside' : 'hideside', isMobile ? 'mobile' : '']">
+    <el-container
+      :class="[isSider ? 'openside' : 'hideside', isMobile ? 'mobile' : '']"
+    >
       <el-row
-        :class="[isShadowBg && isMobile ? 'bg-black opacity-50 w-full h-full absolute top-0 left-0 z-10' : '']"
+        :class="[
+          isShadowBg && isMobile
+            ? 'bg-black opacity-50 w-full h-full absolute top-0 left-0 z-10'
+            : '',
+        ]"
         @click="changeShadow()"
       />
       <el-aside
@@ -91,13 +97,19 @@
                     >
                       <div class="flex items-center">
                         <el-dropdown>
-                          <div class="flex justify-center items-center h-full w-full">
-                            <span class="cursor-pointer flex justify-center items-center">
+                          <div
+                            class="flex justify-center items-center h-full w-full"
+                          >
+                            <span
+                              class="cursor-pointer flex justify-center items-center"
+                            >
                               <CustomPic />
                               <span
                                 v-show="!isMobile"
                                 class="ml-2"
-                              >{{ userStore.userInfo.nickName }}</span>
+                              >{{
+                                userStore.userInfo.nickName
+                              }}</span>
                               <el-icon>
                                 <arrow-down />
                               </el-icon>
@@ -107,7 +119,11 @@
                             <el-dropdown-menu>
                               <template v-if="userStore.userInfo.authorities">
                                 <el-dropdown-item
-                                  v-for="item in userStore.userInfo.authorities.filter(i => i.authorityId !== userStore.userInfo.authorityId)"
+                                  v-for="item in userStore.userInfo.authorities.filter(
+                                    (i) =>
+                                      i.authorityId !==
+                                      userStore.userInfo.authorityId
+                                  )"
                                   :key="item.authorityId"
                                   @click="changeUserAuth(item.authorityId)"
                                 >
@@ -133,8 +149,11 @@
           class="admin-box"
         >
           <div
-           
+            v-loading="loadingFlag"
+            element-loading-text="努力加载中..."
+            element-loading-background="rgba(0, 0, 0, 0)"
           >
+            >
             <transition
               mode="out-in"
               name="fade-in"

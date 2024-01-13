@@ -101,7 +101,7 @@ export default ({
     }),
     Components({
       resolvers: [AntDesignVueResolver(), ElementPlusResolver({
-        importStyle: 'sass'
+        importStyle: true
       })]
     }))
   }
