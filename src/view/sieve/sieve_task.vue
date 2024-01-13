@@ -254,7 +254,7 @@
               <el-button
                 type="danger"
                 link
-                :disabled="scope.row.status!='Success'"
+                :disabled="scope.row.status=='Running'"
                 @click="deleteTask(scope.row)"
               >删除</el-button>
 
@@ -296,6 +296,9 @@
                       v-if="scope.row.invalidAccounts > 1"
                       @click="downloadInvalid(scope.row)"
                     >下载无效账号</el-dropdown-item>
+                    <el-dropdown-item
+                      @click="downloadAll(scope.row)"
+                    >下载正常及封禁账号</el-dropdown-item>
                   </el-dropdown-menu>
                 </template>
               </el-dropdown>
@@ -437,6 +440,7 @@ import {
   downloadDisableAccounts,
   downloadNormalAccounts,
   downloadInvalidAccounts,
+  downloadAllAccounts,
 } from '@/api/sieve'
 import {
   getAvailableConcurrency,
@@ -578,7 +582,7 @@ const getStatusButtonType = (status) => {
     case 'Running':
       return '运行中'
     case 'Pause':
-      return '已暂停'
+      return '暂停'
     default:
       return ''
   }
@@ -809,14 +813,28 @@ const openRecover = (row) => {
 }
 
 // 通用的下载文件函数
-const downloadFile = async(downloadFunc, row, fileName, delay = 3000) => {
-  try {
-    ElMessage.info('准备下载，请稍候...')
-    const response = await downloadFunc(row.ID)
 
+const downloadFile = async(downloadFunc, row, delay = 3000) => {
+  try {
+    const response = await downloadFunc(row.ID)
     if (response && response.data) {
+      // 提取文件名
+      const contentDisposition = response.headers['content-disposition']
+      let fileName = 'download.txt' // 默认文件名
+
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename\*?=UTF-8''(.+?)(;|$)/) ||
+                              contentDisposition.match(/filename="?(.+?)"?(;|$)/)
+        if (filenameMatch && filenameMatch.length > 1) {
+          fileName = decodeURIComponent(filenameMatch[1])
+        }
+      }
+
       console.log(`开始下载 ${fileName}`, response)
       const blob = new Blob([response.data], { type: 'text/plain' })
+
+      // 显示准备下载的消息
+      ElMessage.info('准备下载，请稍候...')
 
       setTimeout(() => {
         // 延迟下载
@@ -827,31 +845,38 @@ const downloadFile = async(downloadFunc, row, fileName, delay = 3000) => {
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
-        URL.revokeObjectURL(url)
+        window.URL.revokeObjectURL(url)
         ElMessage.success('下载成功')
       }, delay)
     } else {
-      ElMessage.error(`下载 ${fileName} 失败：没有数据返回`)
+      ElMessage.error('下载失败：服务器未返回文件')
     }
   } catch (error) {
-    ElMessage.error('下载出错')
+    // 显示具体的错误信息
+    const errorMessage = error.response && error.response.data ? error.response.data.message : '下载出错'
+    ElMessage.error(errorMessage)
     console.error('下载出错', error)
   }
 }
 
 // 下载禁用账号
 const downloadDisable = async(row) => {
-  await downloadFile(downloadDisableAccounts, row, '封禁账号.txt')
+  await downloadFile(downloadDisableAccounts, row)
 }
 
 // 下载存活账号
 const downloadNormal = async(row) => {
-  await downloadFile(downloadNormalAccounts, row, '正常账号.txt')
+  await downloadFile(downloadNormalAccounts, row)
 }
 
 // 下载存活账号
 const downloadInvalid = async(row) => {
-  await downloadFile(downloadInvalidAccounts, row, '无效账号.txt')
+  await downloadFile(downloadInvalidAccounts, row)
+}
+
+// 下载存活账号
+const downloadAll = async(row) => {
+  await downloadFile(downloadAllAccounts, row)
 }
 
 const concurrencyInfo = ref({
