@@ -128,7 +128,6 @@
           width="55"
         />
         <el-table-column
-          type="index"
           label="ID"
           width="100"
           prop="ID"
@@ -136,7 +135,7 @@
         <el-table-column
           align="left"
           label="任务名称"
-          min-width="180"
+          min-width="140"
           prop="taskName"
         />
         <el-table-column
@@ -166,7 +165,7 @@
         <el-table-column
           align="left"
           label="状态"
-          min-width="180"
+          min-width="130"
         >
           <template #default="{ row }">
             <a-tag :color="getStatusTag(row.status)">
@@ -178,15 +177,13 @@
         <el-table-column
           align="left"
           label="正常"
-          min-width="180"
+          min-width="140"
           prop="nonDisabledAccounts"
         >
           <template #default="{ row }">
             {{ row.nonDisabledAccounts }}
             <span v-if="row.totalNumber > 0">
-              ({{
-                Math.round((row.nonDisabledAccounts / row.totalNumber) * 100)
-              }}%)
+              ({{ row.nonDisabledAccounts === 0 ? '0%' : (row.nonDisabledAccounts / row.totalNumber * 100).toFixed(2) + '%' }})
             </span>
             <span v-else> (0%) </span>
           </template>
@@ -195,15 +192,13 @@
         <el-table-column
           align="left"
           label="封禁"
-          min-width="180"
+          min-width="140"
           prop="disabledAccounts"
         >
           <template #default="{ row }">
             {{ row.disabledAccounts }}
             <span v-if="row.totalNumber > 0">
-              ({{
-                Math.round((row.disabledAccounts / row.totalNumber) * 100)
-              }}%)
+              ({{ row.disabledAccounts === 0 ? '0%' : (row.disabledAccounts / row.totalNumber * 100).toFixed(2) + '%' }})
             </span>
             <span v-else>0%</span>
           </template>
@@ -212,13 +207,13 @@
         <el-table-column
           align="left"
           label="无效"
-          min-width="180"
+          min-width="130"
           prop="invalidAccounts"
         >
           <template #default="{ row }">
             {{ row.invalidAccounts }}
             <span v-if="row.totalNumber > 0">
-              ({{ Math.round((row.invalidAccounts / row.totalNumber) * 100) }}%)
+              ({{ row.invalidAccounts === 0 ? '0%' : (row.invalidAccounts / row.totalNumber * 100).toFixed(2) + '%' }})
             </span>
             <span v-else>0%</span>
           </template>
@@ -226,8 +221,22 @@
 
         <el-table-column
           align="left"
+          label="检测失败"
+          min-width="130"
+          prop="failedAccounts"
+        >
+          <template #default="{ row }">
+            {{ row.failedAccounts }}
+            <span v-if="row.totalNumber > 0">
+              ({{ row.failedAccounts === 0 ? '0%' : (row.failedAccounts / row.totalNumber * 100).toFixed(2) + '%' }})
+            </span>
+            <span v-else>0%</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          align="left"
           label="总数"
-          min-width="180"
+          min-width="100"
           prop="totalNumber"
         >
           <template #default="{ row }">
@@ -237,7 +246,7 @@
         <el-table-column
           align="left"
           label="并发数"
-          min-width="180"
+          min-width="100"
           prop="concurrency"
         />
         <el-table-column
