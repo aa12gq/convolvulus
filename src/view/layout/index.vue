@@ -172,7 +172,6 @@
           </div>
         </router-view>
         <BottomInfo />
-        <setting />
         <CommandMenu ref="command" />
       </el-main>
     </el-container>
