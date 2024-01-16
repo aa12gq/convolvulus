@@ -90,7 +90,7 @@ export const downloadInvalidAccounts = (taskId) => {
 
 export const downloadAllAccounts = (taskId) => {
   return service({
-    url: `/sievenNumber/downloadAccounts/${String(taskId)}`,
+    url: `/sievenNumber/downloadAllAccounts/${String(taskId)}`,
     method: 'get',
     responseType: 'blob', // 确保响应类型为 blob，这样才能处理文件流
   })
