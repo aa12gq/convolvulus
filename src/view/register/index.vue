@@ -187,7 +187,7 @@
               >更新并发数</el-button> -->
               <el-button
                 icon="delete"
-                type="primary"
+                type="success"
                 link
                 :disabled="scope.row.status == 'Running'"
                 @click="deleteTask(scope.row)"
@@ -199,7 +199,7 @@
               >
                 <el-button
                   class="button-with-icon-right ml-3"
-                  type="primary"
+                  type="success"
                   link
                   icon="More"
                 >更多操作</el-button>

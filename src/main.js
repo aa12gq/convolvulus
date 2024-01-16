@@ -12,7 +12,6 @@ import '@/permission'
 import run from '@/core/gin-vue-admin.js'
 import auth from '@/directive/auth'
 import { store } from '@/pinia'
-import Antd from 'ant-design-vue'
 
 import App from './App.vue'
 import { initDom } from './utils/positionToCode'
@@ -38,7 +37,6 @@ app
   .use(run)
   .use(store)
   .use(auth)
-  .use(Antd)
   .use(router)
   .mount('#app')
 

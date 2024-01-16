@@ -69,7 +69,7 @@ const getTheme = () => {
         activeBackground: 'var(--el-color-primary)',
         activeText: '#fff',
         normalText: '#fff',
-        hoverBackground: 'rgba(64, 158, 255, 0.08)',
+        hoverBackground: '#00B299',
         hoverText: '#fff',
       }
       break

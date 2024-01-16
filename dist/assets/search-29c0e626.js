@@ -1,0 +1,4 @@
+/*! 
+ Build based on gin-vue-admin 
+ Time : 1705391497000 */
+import e from"./index-687ca9fa.js";import{e as a}from"./index-e8818864.js";/* empty css                                                               */import{_ as o}from"./_plugin-vue_export-helper-1b428a4d.js";import"./.pnpm-8206d43d.js";import"vue";/* empty css                                                              */const s={class:"search-component"},t=o(Object.assign({name:"BtnBox"},{__name:"search",setup(o){const t=Vue.ref(!1),r=()=>{t.value=!0,a.emit("reload"),setTimeout((()=>{t.value=!1}),500)};return(a,o)=>(Vue.openBlock(),Vue.createElementBlock("div",s,[Vue.createElementVNode("div",{class:Vue.normalizeClass(["gvaIcon gvaIcon-refresh",[t.value?"reloading":""]]),onClick:r},null,2),Vue.createVNode(e,{class:"search-icon"})]))}}),[["__scopeId","data-v-aed67a84"]]);export{t as default};

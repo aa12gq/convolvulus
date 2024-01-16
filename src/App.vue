@@ -8,8 +8,6 @@
 
 <script setup>
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
-// element 2.3.8之前使用下面的语句
-// import zhCn from 'element-plus/lib/locale/lang/zh-cn'
 
 defineOptions({
   name: 'App'
@@ -29,5 +27,15 @@ defineOptions({
 }
 .el-button{
   font-weight: 400 !important;
+  border: none !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
 }
+.el-tag{
+  color: white !important;
+  border: none !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+}
+
 </style>

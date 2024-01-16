@@ -21,7 +21,7 @@
         >
           <div
             v-if="isSider"
-            class="inline-flex text-white font-semibold text-xl"
+            class="inline-flex font-mono font-bold text-3xl"
             :style="{ color: textColor }"
           >
             {{ $GIN_VUE_ADMIN.appName }}
@@ -31,85 +31,92 @@
       </el-aside>
       <el-main class="main-cont main-right">
         <transition
-          :duration="{ enter: 500, leave: 100 }"
-          mode="out-in"
-          name="fade-in"
+            :duration="{ enter: 500, leave: 100 }"
+            mode="out-in"
+            name="fade-in"
         >
           <div
-            :style="{ width: `calc(100% - ${getAsideWidth()})` }"
-            class="fixed top-0 box-border z-20"
+              :style="{ width: `calc(100% - ${getAsideWidth()})` }"
+              class="fixed top-0 box-border z-20"
           >
             <el-row>
               <el-col>
                 <el-header class="header-cont">
                   <el-row class="p-0 h-full">
                     <el-col
-                      :xs="2"
-                      :lg="1"
-                      :md="1"
-                      :sm="1"
-                      :xl="1"
-                      class="flex items-center pl-3"
+                        :xs="2"
+                        :lg="1"
+                        :md="1"
+                        :sm="1"
+                        :xl="1"
+                        class="flex items-center pl-3"
                     >
                       <div
-                        class="text-black cursor-pointer text-lg leading-5"
-                        @click="totalCollapse"
+                          class="text-black cursor-pointer text-lg leading-5"
+                          @click="totalCollapse"
                       >
                         <div
-                          v-if="isCollapse"
-                          class="gvaIcon gvaIcon-arrow-double-right"
+                            v-if="isCollapse"
+                            class="gvaIcon gvaIcon-arrow-double-right"
                         />
                         <div
-                          v-else
-                          class="gvaIcon gvaIcon-arrow-double-left"
+                            v-else
+                            class="gvaIcon gvaIcon-arrow-double-left"
                         />
                       </div>
                     </el-col>
                     <el-col
-                      :xs="10"
-                      :lg="14"
-                      :md="14"
-                      :sm="9"
-                      :xl="14"
-                      :pull="1"
-                      class="flex items-center"
+                        :xs="10"
+                        :lg="14"
+                        :md="14"
+                        :sm="9"
+                        :xl="14"
+                        :pull="1"
+                        class="flex items-center"
                     >
                       <el-breadcrumb
-                        v-show="!isMobile"
-                        class="breadcrumb"
-                        separator="/"
+                          v-show="!isMobile"
+                          class="breadcrumb"
+                          separator="/"
                       >
                         <el-breadcrumb-item
-                          v-for="item in matched.slice(1, matched.length)"
-                          :key="item.path"
+                            v-for="item in matched.slice(1, matched.length)"
+                            :key="item.path"
                         >
                           {{ fmtTitle(item.meta.title, route) }}
                         </el-breadcrumb-item>
                       </el-breadcrumb>
                     </el-col>
                     <el-col
-                      :xs="12"
-                      :lg="9"
-                      :md="9"
-                      :sm="14"
-                      :xl="9"
-                      class="flex items-center justify-end pr-3"
+                        :xs="12"
+                        :lg="9"
+                        :md="9"
+                        :sm="14"
+                        :xl="9"
+                        class="flex items-center justify-end pr-3"
                     >
                       <div class="flex items-center">
+                        <el-button type="success">
+                          到期时间:xx
+                        </el-button>
+                        <el-switch class="mx-5" v-model="theme" @change="changeMode"
+                                   inline-prompt
+                                   active-text="夜间"
+                                   inactive-text="日间" />
                         <el-dropdown>
                           <div
-                            class="flex justify-center items-center h-full w-full"
+                              class="flex justify-center items-center h-full w-full"
                           >
                             <span
-                              class="cursor-pointer flex justify-center items-center"
+                                class="cursor-pointer flex justify-center items-center"
                             >
                               <CustomPic />
                               <span
-                                v-show="!isMobile"
-                                class="ml-2"
+                                  v-show="!isMobile"
+                                  class="ml-2"
                               >{{
-                                userStore.userInfo.nickName
-                              }}</span>
+                                  userStore.userInfo.nickName
+                                }}</span>
                               <el-icon>
                                 <arrow-down />
                               </el-icon>
@@ -119,13 +126,13 @@
                             <el-dropdown-menu>
                               <template v-if="userStore.userInfo.authorities">
                                 <el-dropdown-item
-                                  v-for="item in userStore.userInfo.authorities.filter(
+                                    v-for="item in userStore.userInfo.authorities.filter(
                                     (i) =>
                                       i.authorityId !==
                                       userStore.userInfo.authorityId
                                   )"
-                                  :key="item.authorityId"
-                                  @click="changeUserAuth(item.authorityId)"
+                                    :key="item.authorityId"
+                                    @click="changeUserAuth(item.authorityId)"
                                 >
                                   <span>切换为：{{ item.authorityName }}</span>
                                 </el-dropdown-item>
@@ -153,7 +160,7 @@
             element-loading-text="努力加载中..."
             element-loading-background="rgba(0, 0, 0, 0)"
           >
-            >
+
             <transition
               mode="out-in"
               name="fade-in"
@@ -179,7 +186,6 @@ import Search from '@/view/layout/search/search.vue'
 import BottomInfo from '@/view/layout/bottomInfo/bottomInfo.vue'
 import CustomPic from '@/components/customPic/index.vue'
 import CommandMenu from '@/components/commandMenu/index.vue'
-import Setting from './setting/index.vue'
 import { setUserAuthority } from '@/api/user'
 import { emitter } from '@/utils/bus.js'
 import { computed, ref, onMounted, nextTick } from 'vue'
@@ -202,6 +208,16 @@ const isMobile = ref(false)
 
 const first = ref('')
 const dialogVisible = ref(false)
+const theme = ref(true)
+
+
+const changeMode = (e) => {
+  if (e) {
+    userStore.changeSideMode('dark')
+    return
+  }
+  userStore.changeSideMode("light")
+}
 const initPage = () => {
   // 判断当前用户的操作系统
   if (window.localStorage.getItem('osType') === 'WIN') {
@@ -281,10 +297,11 @@ const getAsideWidth = () => {
 }
 
 const textColor = computed(() => {
+  console.log(userStore.sideMode)
   if (userStore.sideMode === 'dark') {
     return '#fff'
   } else if (userStore.sideMode === 'light') {
-    return '#191a23'
+    return '#2D2A2F'
   } else {
     return userStore.baseColor
   }
@@ -292,7 +309,7 @@ const textColor = computed(() => {
 
 const backgroundColor = computed(() => {
   if (userStore.sideMode === 'dark') {
-    return '#191a23'
+    return '#2D2A2F'
   } else if (userStore.sideMode === 'light') {
     return '#fff'
   } else {

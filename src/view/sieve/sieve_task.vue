@@ -27,13 +27,8 @@
         </div>
         <!-- 搜索框区域 -->
         <div class="search-section flex space-x-4 -ml-2">
-          <a-input-search
-            v-model:value="searchText"
-            placeholder="请输入任务名称进行搜索"
-            enter-button
-            @search="searchTask"
-          />
-          <!-- <el-input
+
+       <el-input
             v-model="searchText"
             placeholder="请输入任务名称"
             clearable
@@ -41,77 +36,67 @@
             @clear="clearSearch"
             @keyup.enter.native="searchTask"
           />
-          <a-button
-            type="primary"
+          <el-button
+              type="success"
             @click="searchTask"
-          >查询</a-button> -->
-          <Button
-            class="mr-4"
-            type="primary"
-            @click="
-              () => {
+
+          >查询</el-button>
+          <el-button type="success" @click="() => {
                 openDialog('add');
                 RefreshAvailableConcurrency();
-              }
-            "
-          >添加任务</Button>
+              }">添加任务</el-button>
         </div>
 
-        <Button
-          type="primary"
+        <el-Button
+          type="danger"
           :disabled="multipleSelection.length == 0"
           @click="batchPause()"
         >
           批量暂停
-        </Button>
-        <Button
-          type="primary"
+        </el-Button>
+        <el-Button
+          type="danger"
           :disabled="multipleSelection.length == 0"
           @click="batchRecover()"
         >
           批量恢复
-        </Button>
-        <Button
-          type="primary"
+        </el-Button>
+        <el-Button
+          type="danger"
           danger
           :disabled="multipleSelection.length == 0"
           @click="batchDelete()"
-        > 批量删除 </Button>
-        <Button
-          type="dashed"
+        > 批量删除 </el-Button>
+        <el-Button
+          type="success"
           @click="getTableData"
-        >刷新一下</Button>
+        >刷新一下</el-Button>
+        <el-select
+            v-model="refreshTime"
+            filterable
+            allow-create
+            default-first-option
+            @change="selectRefreshTime"
+            :reserve-keyword="false"
+            placeholder="选择自动刷新时间"
+            style="width: 180px"
+        >
+          <el-option
+              v-for="item in refreshTimeOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+          />
+        </el-select>
+        <el-switch
+            size="large"
+            @change="controlRefresh"
+            v-model="autoRefresh"
+            inline-prompt
+            active-text="自动刷新开启"
+            inactive-text="自动刷新关闭"
+        />
       </div>
-
-      <!-- <a-table
-        :columns="columns"
-        :data-source="tableData"
-        :scroll="{ x: 1300, y: 1000 }"
-      >
-
-        <template v-if="column.key === 'status'">
-          <span>
-            <a-tag :color="loser">{{record.status }}</a-tag>
-          </span>
-        </template>
-
-        <template #bodyCell="{ record, column }">
-          <template v-if="column.key === 'operation'">
-            <a @click="deleteTask(record)">删除</a>
-            <a-divider type="vertical" />
-            <a-dropdown>
-              <a class="ant-dropdown-link">
-                更多操作
-              </a>
-              <a-menu slot="overlay">
-                <a-menu-item key="1">操作一</a-menu-item>
-                <a-menu-item key="2">操作二</a-menu-item>
-              </a-menu>
-            </a-dropdown>
-          </template>
-        </template>
-
-      </a-table> -->
 
       <el-table
         ref="multipleTableRef"
@@ -168,9 +153,9 @@
           min-width="130"
         >
           <template #default="{ row }">
-            <a-tag :color="getStatusTag(row.status)">
+            <el-tag :color="getStatusTag(row.status)" effect="dark">
               {{ getStatusButtonType(row.status, row) }}
-            </a-tag>
+            </el-tag>
           </template>
         </el-table-column>
 
@@ -272,27 +257,13 @@
           <template #default="scope">
             <!-- Button Group Container -->
             <div class="button-group">
-              <!-- 详情 Button -->
-              <!-- <el-button
-                icon="Files"
-                type="primary"
-                link
-                @click="
-                  $router.push({
-                    name: 'sieve_number',
-                    params: { id: scope.row.ID },
-                  })
-                "
-              >详情</el-button> -->
 
-              <!-- 删除 Button -->
               <el-button
-                type="danger"
+                type="warning"
                 link
                 :disabled="scope.row.status == 'Running'"
                 @click="deleteTask(scope.row)"
               >删除</el-button>
-
               <!-- 更多操作 Dropdown -->
               <el-dropdown
                 trigger="click"
@@ -353,11 +324,22 @@
     <el-dialog
       v-model="dialogFormVisible"
       :before-close="closeDialog"
-      :title="dialogTitle"
       modal
+      width="600px"
       :close-on-click-modal="false"
       draggable
+      :show-close="false"
     >
+      <template #header="{ close, titleId}">
+        <div class="h-10 flex justify-between">
+          <h4 :id="titleId" class="text-xl">{{dialogTitle}}</h4>
+          <el-button type="danger" @click="close" class="mt-5">
+            <el-icon class="el-icon--left"><CircleCloseFilled /></el-icon>
+            Close
+          </el-button>
+        </div>
+      </template>
+
       <el-form
         ref="formRef"
         :model="form"
@@ -445,15 +427,16 @@
         </el-form-item>
 
         <el-form-item>
-          <a-button
-            type="primary"
+          <el-button
+            type="success"
             class="w-[7rem] rounded"
             @click="submitForm"
-          >添加</a-button>
-          <a-button
+          >添加</el-button>
+          <el-button
+              color="#DEDCD2"
             class="w-[7rem] rounded ml-2"
             @click="resetForm"
-          >清空</a-button>
+          >清空</el-button>
         </el-form-item>
       </el-form>
     </el-dialog>
@@ -478,8 +461,7 @@ import { getCountryInfoList } from '@/api/country'
 import { formatTimeToStr } from '@/utils/date'
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { message } from 'ant-design-vue'
-import { Button } from 'ant-design-vue'
+import { CircleCloseFilled } from '@element-plus/icons-vue'
 
 const handleClose = () => {
   drawer.value = false
@@ -494,6 +476,48 @@ const tableData = ref([])
 const searchText = ref('')
 const currentSearchText = ref('')
 const isRefreshing = ref(false)
+const autoRefresh =ref(false)
+const refreshTime = ref()
+const refreshTimeOptions = [
+  {
+    value: 5000,
+    label: '5秒',
+  },
+  {
+    value: 10000,
+    label: '10秒',
+  },
+  {
+    value: 15000,
+    label: '15秒',
+  },
+  {
+    value: 20000,
+    label: '20秒',
+  },
+]
+const selectRefreshTime = (time) => {
+  if (time!==undefined){
+    console.log(time)
+    refreshTime.value = time
+    autoRefresh.value = true
+    stopAutoRefresh()
+    startAutoRefresh()
+  }
+}
+
+
+const controlRefresh = (isEnableRefresh) => {
+    if (isEnableRefresh){
+      stopAutoRefresh()
+      startAutoRefresh()
+    }else {
+      stopAutoRefresh()
+      refreshTime.value = undefined
+      ElMessage.success("自动刷新关闭")
+    }
+
+}
 
 const handlePageChange = (val) => {
   page.value = val
@@ -539,11 +563,11 @@ const getTableData = async(sortProp, sortOrder) => {
 
       tableData.value = table.data.list
 
-      if (shouldAutoRefresh(table.data.list)) {
-        startAutoRefresh()
-      } else {
-        stopAutoRefresh()
-      }
+      // if (shouldAutoRefresh(table.data.list)) {
+      //   startAutoRefresh()
+      // } else {
+      //   stopAutoRefresh()
+      // }
     }, 100)
     total.value = table.data.total
     page.value = table.data.page
@@ -583,7 +607,7 @@ const deleteTask = (row) => {
     .then(async() => {
       const res = await deleteSieveTask({ ID: row.ID })
       if (res.code === 0) {
-        message.success('任务删除成功!')
+        ElMessage.success('任务删除成功！')
         if (tableData.value.length === 1 && page.value > 1) {
           page.value--
         }
@@ -595,7 +619,7 @@ const deleteTask = (row) => {
       }
     })
     .catch(() => {
-      message.warning('已取消删除')
+      ElMessage.warning("已取消删除")
     })
 }
 
@@ -757,29 +781,39 @@ const resetForm = () => {
 // 开启自动刷新
 let refreshTimer = null
 const startAutoRefresh = () => {
+  console.log(refreshTime.value)
+  // 判断是否选择了刷新时间,如果没选择默认为5秒
+  if (refreshTime.value === undefined){
+    refreshTime.value = 5000
+    ElMessage.success("开启自动刷新默认为5秒")
+  }else {
+    ElMessage.success("开启自动刷新")
+  }
   if (!refreshTimer) {
+    console.log(refreshTimer)
     refreshTimer = setInterval(() => {
       getTableData()
-    }, 5000)
+    }, refreshTime.value)
   }
 }
 
 // 停止自动刷新
 const stopAutoRefresh = () => {
   if (refreshTimer) {
+    console.log(refreshTimer)
     clearInterval(refreshTimer)
     refreshTimer = null
   }
 }
 
-const shouldAutoRefresh = (list) => {
-  // 如果列表中存在至少一个状态为 'Running' 的项，则返回true
-  return list.some((item) => item.status === 'Running')
-}
+// const shouldAutoRefresh = (list) => {
+//   // 如果列表中存在至少一个状态为 'Running' 的项，则返回true
+//   return list.some((item) => item.status === 'Running')
+// }
 
 onMounted(() => {
   // 定义定时器，每十秒刷新数据
-  startAutoRefresh()
+  // startAutoRefresh()
 
   // 当用户离开页面时清除定时器
   window.addEventListener('beforeunload', () => {
@@ -989,7 +1023,7 @@ const type = ref('')
 
 const countryInfoList = ref([])
 const refreshCountryInfoList = async() => {
-  const result = await getCountryInfoList(1, 300)
+  const result = await getCountryInfoList(1, 10)
   if (result.code === 0 && Array.isArray(result.data.list)) {
     countryInfoList.value = []
     setTimeout(() => {
@@ -1054,17 +1088,17 @@ const columns = [
 const getStatusTag = (status) => {
   switch (status) {
     case 'Init':
-      return 'default'
+      return '#fffdf1'
     case 'Pending':
-      return 'default'
+      return '#fffdf1'
     case 'Success':
-      return '#87d068'
+      return '#92c800'
     case 'Failed':
-      return '#f50'
+      return '#d72539'
     case 'Running':
-      return 'processing'
+      return '#88d0ff'
     case 'Pause':
-      return 'error'
+      return '#ff6d00'
     default:
       return ''
   }
@@ -1091,7 +1125,7 @@ const batchDelete = () => {
           // 调用删除任务的函数
           const res = await deleteSieveTask({ ID: row.ID })
           if (res.code === 0) {
-            message.success('任务删除成功!')
+            ElMessage.success('任务删除成功')
             if (tableData.value.length === 1 && page.value > 1) {
               page.value--
             }
@@ -1106,7 +1140,7 @@ const batchDelete = () => {
     })
     .catch(() => {
       // 用户点击了取消按钮
-      message.warning('已取消批量删除')
+      ElMessage.warning('已取消批量删除')
     })
 }
 
@@ -1125,7 +1159,7 @@ const batchRecover = () => {
           // 调用删除任务的函数
           const res = await pauseTask(row.ID)
           if (res.code === 0) {
-            message.success('任务暂停成功!')
+            ElMessage.success('任务暂停成功!')
             if (tableData.value.length === 1 && page.value > 1) {
               page.value--
             }
@@ -1140,7 +1174,7 @@ const batchRecover = () => {
     })
     .catch(() => {
       // 用户点击了取消按钮
-      message.warning('已取消批量暂停')
+      ElMessage.warning('已取消批量暂停')
     })
 }
 
@@ -1159,7 +1193,7 @@ const batchPause = () => {
           // 调用删除任务的函数
           const res = await recoverTask(row.ID)
           if (res.code === 0) {
-            message.success('任务恢复成功!')
+            ElMessage.success('任务恢复成功!')
             if (tableData.value.length === 1 && page.value > 1) {
               page.value--
             }
@@ -1170,7 +1204,7 @@ const batchPause = () => {
     })
     .catch(() => {
       // 用户点击了取消按钮
-      message.warning('已取消批量恢复')
+      ElMessage.warning('已取消批量恢复')
     })
 }
 </script>
@@ -1227,4 +1261,5 @@ const batchPause = () => {
     transform: rotate(360deg);
   }
 }
+
 </style>
