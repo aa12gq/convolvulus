@@ -31,92 +31,100 @@
       </el-aside>
       <el-main class="main-cont main-right">
         <transition
-            :duration="{ enter: 500, leave: 100 }"
-            mode="out-in"
-            name="fade-in"
+          :duration="{ enter: 500, leave: 100 }"
+          mode="out-in"
+          name="fade-in"
         >
           <div
-              :style="{ width: `calc(100% - ${getAsideWidth()})` }"
-              class="fixed top-0 box-border z-20"
+            :style="{ width: `calc(100% - ${getAsideWidth()})` }"
+            class="fixed top-0 box-border z-20"
           >
             <el-row>
               <el-col>
                 <el-header class="header-cont">
                   <el-row class="p-0 h-full">
                     <el-col
-                        :xs="2"
-                        :lg="1"
-                        :md="1"
-                        :sm="1"
-                        :xl="1"
-                        class="flex items-center pl-3"
+                      :xs="2"
+                      :lg="1"
+                      :md="1"
+                      :sm="1"
+                      :xl="1"
+                      class="flex items-center pl-3"
                     >
                       <div
-                          class="text-black cursor-pointer text-lg leading-5"
-                          @click="totalCollapse"
+                        class="text-black cursor-pointer text-lg leading-5"
+                        @click="totalCollapse"
                       >
                         <div
-                            v-if="isCollapse"
-                            class="gvaIcon gvaIcon-arrow-double-right"
+                          v-if="isCollapse"
+                          class="gvaIcon gvaIcon-arrow-double-right"
                         />
                         <div
-                            v-else
-                            class="gvaIcon gvaIcon-arrow-double-left"
+                          v-else
+                          class="gvaIcon gvaIcon-arrow-double-left"
                         />
                       </div>
                     </el-col>
                     <el-col
-                        :xs="10"
-                        :lg="14"
-                        :md="14"
-                        :sm="9"
-                        :xl="14"
-                        :pull="1"
-                        class="flex items-center"
+                      :xs="10"
+                      :lg="14"
+                      :md="14"
+                      :sm="9"
+                      :xl="14"
+                      :pull="1"
+                      class="flex items-center"
                     >
                       <el-breadcrumb
-                          v-show="!isMobile"
-                          class="breadcrumb"
-                          separator="/"
+                        v-show="!isMobile"
+                        class="breadcrumb"
+                        separator="/"
                       >
                         <el-breadcrumb-item
-                            v-for="item in matched.slice(1, matched.length)"
-                            :key="item.path"
+                          v-for="item in matched.slice(1, matched.length)"
+                          :key="item.path"
                         >
                           {{ fmtTitle(item.meta.title, route) }}
                         </el-breadcrumb-item>
                       </el-breadcrumb>
                     </el-col>
                     <el-col
-                        :xs="12"
-                        :lg="9"
-                        :md="9"
-                        :sm="14"
-                        :xl="9"
-                        class="flex items-center justify-end pr-3"
+                      :xs="12"
+                      :lg="9"
+                      :md="9"
+                      :sm="14"
+                      :xl="9"
+                      class="flex items-center justify-end pr-3"
                     >
                       <div class="flex items-center">
-                        <el-button type="success">
-                          到期时间:xx
+                        <el-button
+                          icon="Clock"
+                          :type="remainingTime.color"
+                          class="max-h-fit mr-6"
+                        >
+                          到期时间:{{ remainingTime.expired ? '已过期' + remainingTime.days + '天' : remainingTime.days + '天' }}
                         </el-button>
-                        <el-switch class="mx-5" v-model="theme" @change="changeMode"
-                                   inline-prompt
-                                   active-text="夜间"
-                                   inactive-text="日间" />
+                        <!-- <el-switch
+                          v-model="theme"
+                          class="mx-5"
+                          inline-prompt
+                          active-text="侧边黑"
+                          inactive-text="侧边白"
+                          @change="changeMode"
+                        /> -->
                         <el-dropdown>
                           <div
-                              class="flex justify-center items-center h-full w-full"
+                            class="flex justify-center items-center h-full w-full"
                           >
                             <span
-                                class="cursor-pointer flex justify-center items-center"
+                              class="cursor-pointer flex justify-center items-center"
                             >
                               <CustomPic />
                               <span
-                                  v-show="!isMobile"
-                                  class="ml-2"
+                                v-show="!isMobile"
+                                class="ml-2"
                               >{{
-                                  userStore.userInfo.nickName
-                                }}</span>
+                                userStore.userInfo.nickName
+                              }}</span>
                               <el-icon>
                                 <arrow-down />
                               </el-icon>
@@ -126,17 +134,21 @@
                             <el-dropdown-menu>
                               <template v-if="userStore.userInfo.authorities">
                                 <el-dropdown-item
-                                    v-for="item in userStore.userInfo.authorities.filter(
+                                  v-for="item in userStore.userInfo.authorities.filter(
                                     (i) =>
                                       i.authorityId !==
                                       userStore.userInfo.authorityId
                                   )"
-                                    :key="item.authorityId"
-                                    @click="changeUserAuth(item.authorityId)"
+                                  :key="item.authorityId"
+                                  @click="changeUserAuth(item.authorityId)"
                                 >
                                   <span>切换为：{{ item.authorityName }}</span>
                                 </el-dropdown-item>
                               </template>
+                              <el-dropdown-item
+                                icon="avatar"
+                                @click="toPerson"
+                              >个人信息</el-dropdown-item>
                               <el-dropdown-item @click="userStore.LoginOut">退出登录</el-dropdown-item>
                             </el-dropdown-menu>
                           </template>
@@ -209,13 +221,12 @@ const first = ref('')
 const dialogVisible = ref(false)
 const theme = ref(true)
 
-
 const changeMode = (e) => {
   if (e) {
     userStore.changeSideMode('dark')
     return
   }
-  userStore.changeSideMode("light")
+  userStore.changeSideMode('light')
 }
 const initPage = () => {
   // 判断当前用户的操作系统
@@ -362,6 +373,32 @@ const changeShadow = () => {
   isSider.value = !!isCollapse.value
   totalCollapse()
 }
+
+const remainingTime = computed(() => {
+  // 获取当前时间
+  const now = new Date()
+  // 获取过期时间
+  const expireDate = new Date(userStore.userInfo.expire_date)
+  // 计算差值（单位：毫秒）
+  const diff = expireDate - now
+  let color = 'success' // 默认为绿色
+
+  if (diff < 0) {
+    // 已过期，计算过期天数
+    const days = Math.ceil(Math.abs(diff) / (1000 * 60 * 60 * 24))
+    color = 'danger' // 红色
+    return { days, expired: true, color }
+  } else {
+    // 将差值转换为天数和秒数
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+    const seconds = Math.floor((diff % (1000 * 60 * 60 * 24)) / 1000)
+    if (days <= 15) {
+      color = 'warning' // 黄色
+    }
+    return { days, seconds, expired: false, color }
+  }
+})
+
 </script>
 
 <style lang="scss">

@@ -1,4 +1,0 @@
-/*! 
- Build based on gin-vue-admin 
- Time : 1705391497000 */
-import{W as e}from"./warningBar-4e9b9d77.js";import{l as t}from"./autoCode-c4ad6525.js";import"./.pnpm-8206d43d.js";import"vue";import"./index-e8818864.js";const o={class:"p-5 bg-white"},l={class:"flex items-center gap-3"},a={__name:"pubPlug",setup(a){const u=Vue.ref(""),r=async()=>{const e=await t({plugName:u.value});0===e.code&&ElementPlus.ElMessage.success(e.msg)};return(t,a)=>{const s=Vue.resolveComponent("el-input"),n=Vue.resolveComponent("el-button");return Vue.openBlock(),Vue.createElementBlock("div",o,[Vue.createVNode(e,{title:"目前只支持标准插件（通过插件模板生成的标准目录插件），非标准插件请自行打包"}),Vue.createElementVNode("div",l,[Vue.createVNode(s,{modelValue:u.value,"onUpdate:modelValue":a[0]||(a[0]=e=>u.value=e),placeholder:"插件模板处填写的【插件名】"},null,8,["modelValue"]),Vue.createVNode(n,{type:"primary",onClick:r},{default:Vue.withCtx((()=>[Vue.createTextVNode("打包插件")])),_:1})])])}}};export{a as default};

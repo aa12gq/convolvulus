@@ -112,34 +112,34 @@ export default ({
     plugins: [
       PkgConfig(),
       OptimizationPersist(),
-      importToCDN({
-        prodUrl: "https://unpkg.com/{name}@{path}",
-        modules:[
-          {
-            name: "element-plus",
-            var: "ElementPlus",
-            path: "2.3.8",
-            css: "2.3.8/dist/index.css"
-          },
-          {
-            name: "pinia",
-            var: "Pinia",
-            path: "2.1.4",
-          },
-          {
-            name: "vue-router",
-            var: "VueRouter",
-            path: "4.2.3",
-          },
-          {
-            name: "echarts",
-            var: "Echarts",
-            path: "5.4.3",
-          },
-          autoComplete('axios'),
-          autoComplete('vue'),
-        ]
-      }),
+      // importToCDN({
+      //   prodUrl: "https://unpkg.com/{name}@{path}",
+      //   modules:[
+      //     {
+      //       name: "element-plus",
+      //       var: "ElementPlus",
+      //       path: "2.3.8",
+      //       css: "2.3.8/dist/index.css"
+      //     },
+      //     {
+      //       name: "pinia",
+      //       var: "Pinia",
+      //       path: "2.1.4",
+      //     },
+      //     {
+      //       name: "vue-router",
+      //       var: "VueRouter",
+      //       path: "4.2.3",
+      //     },
+      //     {
+      //       name: "echarts",
+      //       var: "Echarts",
+      //       path: "5.4.3",
+      //     },
+      //     autoComplete('axios'),
+      //     autoComplete('vue'),
+      //   ]
+      // }),
       visualizer({
         emitFile: false,
         filename: 'stats.html',

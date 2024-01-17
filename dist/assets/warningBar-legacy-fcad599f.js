@@ -1,4 +1,0 @@
-/*! 
- Build based on gin-vue-admin 
- Time : 1705391497000 */
-System.register(["./.pnpm-legacy-10f1d416.js"],(function(e,t){"use strict";var n;return{setters:[function(e){n=e.b}],execute:function(){e("W",{__name:"warningBar",props:{title:{type:String,default:""},href:{type:String,default:""}},setup:function(e){var t=e,r=function(){t.href&&window.open(t.href)};return function(t,u){var o=Vue.resolveComponent("el-icon");return Vue.openBlock(),Vue.createElementBlock("div",{class:Vue.normalizeClass(["px-1.5 py-2 flex items-center bg-amber-50 rounded gap-2 mb-3 text-amber-500",e.href&&"cursor-pointer"]),onClick:r},[Vue.createVNode(o,{class:"text-xl"},{default:Vue.withCtx((function(){return[Vue.createVNode(Vue.unref(n))]})),_:1}),Vue.createElementVNode("span",null,Vue.toDisplayString(e.title),1)],2)}}})}}}));

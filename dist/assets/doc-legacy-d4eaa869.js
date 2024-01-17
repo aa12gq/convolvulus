@@ -1,4 +1,4 @@
 /*! 
  Build based on gin-vue-admin 
- Time : 1705391497000 */
+ Time : 1705492673000 */
 System.register([],(function(n,t){"use strict";return{execute:function(){n("t",(function(n){window.open(n,"_blank")}))}}}));

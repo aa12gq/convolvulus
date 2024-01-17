@@ -28,7 +28,7 @@
         <!-- 搜索框区域 -->
         <div class="search-section flex space-x-4 -ml-2">
 
-       <el-input
+          <el-input
             v-model="searchText"
             placeholder="请输入任务名称"
             clearable
@@ -37,65 +37,70 @@
             @keyup.enter.native="searchTask"
           />
           <el-button
-              type="success"
+            class="bg-[#4773C5] text-gray-100"
             @click="searchTask"
-
           >查询</el-button>
-          <el-button type="success" @click="() => {
-                openDialog('add');
-                RefreshAvailableConcurrency();
-              }">添加任务</el-button>
+          <el-button
+            class="bg-[#4773C5] text-gray-100"
+            @click="() => {
+              openDialog('add');
+              RefreshAvailableConcurrency();
+            }"
+          >添加任务</el-button>
         </div>
 
         <el-Button
-          type="danger"
+          class="bg-[#CFAB86] text-gray-100"
           :disabled="multipleSelection.length == 0"
           @click="batchPause()"
         >
           批量暂停
         </el-Button>
         <el-Button
-          type="danger"
+          class="bg-[#CFAB86] text-gray-100"
           :disabled="multipleSelection.length == 0"
           @click="batchRecover()"
         >
           批量恢复
         </el-Button>
         <el-Button
-          type="danger"
+          class="bg-[#CFAB86] text-gray-100"
           danger
           :disabled="multipleSelection.length == 0"
           @click="batchDelete()"
         > 批量删除 </el-Button>
         <el-Button
-          type="success"
+          class="bg-[#4773C5] text-gray-100"
           @click="getTableData"
         >刷新一下</el-Button>
-        <el-select
+        <div class="ml-auto space-x-2">
+          <el-select
             v-model="refreshTime"
             filterable
             allow-create
             default-first-option
-            @change="selectRefreshTime"
             :reserve-keyword="false"
             placeholder="选择自动刷新时间"
-            style="width: 180px"
-        >
-          <el-option
+            style="width: 155px"
+            @change="selectRefreshTime"
+          >
+            <el-option
               v-for="item in refreshTimeOptions"
               :key="item.value"
               :label="item.label"
               :value="item.value"
-          />
-        </el-select>
-        <el-switch
-            size="large"
-            @change="controlRefresh"
+            />
+          </el-select>
+          <el-switch
             v-model="autoRefresh"
+            size="large"
             inline-prompt
             active-text="自动刷新开启"
             inactive-text="自动刷新关闭"
-        />
+            @change="controlRefresh"
+          />
+        </div>
+
       </div>
 
       <el-table
@@ -153,7 +158,10 @@
           min-width="130"
         >
           <template #default="{ row }">
-            <el-tag :color="getStatusTag(row.status)" effect="dark">
+            <el-tag
+              :color="getStatusTag(row.status)"
+              effect="dark"
+            >
               {{ getStatusButtonType(row.status, row) }}
             </el-tag>
           </template>
@@ -267,11 +275,11 @@
               <!-- 更多操作 Dropdown -->
               <el-dropdown
                 trigger="click"
-                class="el-button-like"
+                class="el-button-like !text-[black]"
               >
                 <el-button
-                  class="button-with-icon-right ml-3"
-                  type="info"
+                  class="button-with-icon-right ml-3 text-gray-500"
+
                   link
                 >更多操作</el-button>
                 <template #dropdown>
@@ -332,10 +340,17 @@
     >
       <template #header="{ close, titleId}">
         <div class="h-10 flex justify-between">
-          <h4 :id="titleId" class="text-xl">{{dialogTitle}}</h4>
-          <el-button type="danger" @click="close" class="mt-5">
+          <h4
+            :id="titleId"
+            class="text-xl"
+          >{{ dialogTitle }}</h4>
+          <el-button
+            type="danger"
+            class="mt-5"
+            @click="close"
+          >
             <el-icon class="el-icon--left"><CircleCloseFilled /></el-icon>
-            Close
+            关闭
           </el-button>
         </div>
       </template>
@@ -411,7 +426,7 @@
             :auto-upload="false"
           >
             <template #trigger>
-              <el-button>选择文件</el-button>
+              <el-button class="bg-gray-100 rounded-none hover:text-">选择文件</el-button>
             </template>
             <el-tooltip
               effect="dark"
@@ -428,12 +443,11 @@
 
         <el-form-item>
           <el-button
-            type="success"
-            class="w-[7rem] rounded"
+            class="w-[7rem] rounded bg-[#4773C5] text-gray-100"
             @click="submitForm"
           >添加</el-button>
           <el-button
-              color="#DEDCD2"
+            color="#DEDCD2"
             class="w-[7rem] rounded ml-2"
             @click="resetForm"
           >清空</el-button>
@@ -476,8 +490,8 @@ const tableData = ref([])
 const searchText = ref('')
 const currentSearchText = ref('')
 const isRefreshing = ref(false)
-const autoRefresh =ref(false)
-const refreshTime = ref()
+const autoRefresh = ref(false)
+const refreshTime = ref(5000)
 const refreshTimeOptions = [
   {
     value: 5000,
@@ -497,26 +511,25 @@ const refreshTimeOptions = [
   },
 ]
 const selectRefreshTime = (time) => {
-  if (time!==undefined){
-    console.log(time)
-    refreshTime.value = time
+  refreshTime.value = time
+  if (!autoRefresh.value) {
     autoRefresh.value = true
-    stopAutoRefresh()
-    startAutoRefresh()
   }
+  stopAutoRefresh()
+  startAutoRefresh()
 }
 
-
 const controlRefresh = (isEnableRefresh) => {
-    if (isEnableRefresh){
+  if (isEnableRefresh) {
+    if (refreshTime.value !== undefined) {
       stopAutoRefresh()
       startAutoRefresh()
-    }else {
-      stopAutoRefresh()
-      refreshTime.value = undefined
-      ElMessage.success("自动刷新关闭")
     }
-
+  } else {
+    stopAutoRefresh()
+    refreshTime.value = 5000
+    ElMessage.info('自动刷新已关闭')
+  }
 }
 
 const handlePageChange = (val) => {
@@ -537,18 +550,24 @@ const searchTask = async() => {
 const clearSearch = () => {
   searchText.value = ''
   currentSearchText.value = ''
+  pageSize.value = 10
   getTableData() // 重新获取数据，不带搜索条件
 }
 
 // 查询
 const getTableData = async(sortProp, sortOrder) => {
-  const table = await getSieveTaskList({
+  const params = {
     page: page.value,
     pageSize: pageSize.value,
     taskName: currentSearchText.value,
-    sort: sortProp,
-    order: sortOrder,
-  })
+  }
+
+  if (typeof sortProp === 'string' && typeof sortOrder === 'string') {
+    params.sort = sortProp
+    params.order = sortOrder
+  }
+
+  const table = await getSieveTaskList(params)
   if (table.code === 0) {
     tableData.value = []
     setTimeout(() => {
@@ -562,16 +581,12 @@ const getTableData = async(sortProp, sortOrder) => {
       })
 
       tableData.value = table.data.list
-
-      // if (shouldAutoRefresh(table.data.list)) {
-      //   startAutoRefresh()
-      // } else {
-      //   stopAutoRefresh()
-      // }
     }, 100)
     total.value = table.data.total
     page.value = table.data.page
-    pageSize.value = table.data.pageSize
+    if (table.data.pageSize !== 0) {
+      pageSize.value = table.data.pageSize
+    }
   }
 }
 
@@ -619,7 +634,7 @@ const deleteTask = (row) => {
       }
     })
     .catch(() => {
-      ElMessage.warning("已取消删除")
+      ElMessage.warning('已取消删除')
     })
 }
 
@@ -783,11 +798,11 @@ let refreshTimer = null
 const startAutoRefresh = () => {
   console.log(refreshTime.value)
   // 判断是否选择了刷新时间,如果没选择默认为5秒
-  if (refreshTime.value === undefined){
+  if (refreshTime.value === undefined) {
     refreshTime.value = 5000
-    ElMessage.success("开启自动刷新默认为5秒")
-  }else {
-    ElMessage.success("开启自动刷新")
+    ElMessage.success('开启自动刷新默认为5秒')
+  } else {
+    ElMessage.success('开启自动刷新')
   }
   if (!refreshTimer) {
     console.log(refreshTimer)
@@ -1023,15 +1038,12 @@ const type = ref('')
 
 const countryInfoList = ref([])
 const refreshCountryInfoList = async() => {
-  const result = await getCountryInfoList(1, 10)
+  const result = await getCountryInfoList(1, 500)
   if (result.code === 0 && Array.isArray(result.data.list)) {
     countryInfoList.value = []
     setTimeout(() => {
       countryInfoList.value = result.data.list
     }, 100)
-    total.value = result.data.total
-    page.value = result.data.page
-    pageSize.value = result.data.pageSize
   }
 }
 
@@ -1244,7 +1256,7 @@ const batchPause = () => {
 
 .el-button-like .el-button:focus,
 .el-button-like .el-button:hover {
-  color: #66b1ff;
+  color: #75b5fa;
   background: none;
   border-color: transparent;
 }

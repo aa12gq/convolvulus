@@ -4,7 +4,7 @@ export const getSieveTaskList = (params) => {
   // params 包含 page, pageSize, taskName, sort, order 等
   const { page, pageSize, taskName, sort, order } = params
   let url = `/sieveTask/getSieveTaskList?page=${page}&pageSize=${pageSize}`
-  if (taskName) url += `&taskName=${taskName}`
+  if (taskName) url += `&taskName=${String(taskName)}`
   if (sort) url += `&sort=${sort}&order=${order}` // 添加排序参数
 
   return service({
