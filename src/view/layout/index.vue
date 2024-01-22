@@ -169,7 +169,9 @@
         >
           <div
             v-loading="loadingFlag"
-            element-loading-text="努力加载中..."
+            element-loading-text="刷新中"
+            :element-loading-svg="svg"
+    class="custom-loading-svg"
             element-loading-background="rgba(0, 0, 0, 0)"
           >
 
@@ -220,6 +222,17 @@ const isMobile = ref(false)
 const first = ref('')
 const dialogVisible = ref(false)
 const theme = ref(true)
+
+const svg = `
+        <path class="path" d="
+          M 30 15
+          L 28 17
+          M 25.61 25.61
+          A 15 15, 0, 0, 1, 15 30
+          A 15 15, 0, 1, 1, 27.99 7.5
+          L 15 15
+        " style="stroke-width: 4px; fill: rgba(0, 0, 0, 0)"/>
+      `
 
 const changeMode = (e) => {
   if (e) {
@@ -414,5 +427,19 @@ const remainingTime = computed(() => {
 }
 :deep .el-overlay {
   background-color: hsla(0, 0%, 100%, 0.9) !important;
+}
+
+.custom-loading-spinner {
+  width: 1em;
+  height: 1em;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #3498db;
+  border-radius: 50%;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>

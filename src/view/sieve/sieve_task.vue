@@ -27,7 +27,6 @@
         </div>
         <!-- 搜索框区域 -->
         <div class="search-section flex space-x-4 -ml-2">
-
           <el-input
             v-model="searchText"
             placeholder="请输入任务名称"
@@ -42,10 +41,12 @@
           >查询</el-button>
           <el-button
             class="bg-[#4773C5] text-gray-100"
-            @click="() => {
-              openDialog('add');
-              RefreshAvailableConcurrency();
-            }"
+            @click="
+              () => {
+                openDialog('add');
+                RefreshAvailableConcurrency();
+              }
+            "
           >添加任务</el-button>
         </div>
 
@@ -68,7 +69,9 @@
           danger
           :disabled="multipleSelection.length == 0"
           @click="batchDelete()"
-        > 批量删除 </el-Button>
+        >
+          批量删除
+        </el-Button>
         <el-Button
           class="bg-[#4773C5] text-gray-100"
           @click="getTableData"
@@ -100,7 +103,6 @@
             @change="controlRefresh"
           />
         </div>
-
       </div>
 
       <el-table
@@ -176,7 +178,13 @@
           <template #default="{ row }">
             {{ row.nonDisabledAccounts }}
             <span v-if="row.totalNumber > 0">
-              ({{ row.nonDisabledAccounts === 0 ? '0%' : (row.nonDisabledAccounts / row.totalNumber * 100).toFixed(2) + '%' }})
+              ({{
+                row.nonDisabledAccounts === 0
+                  ? "0%"
+                  : ((row.nonDisabledAccounts / row.totalNumber) * 100).toFixed(
+                    2
+                  ) + "%"
+              }})
             </span>
             <span v-else> (0%) </span>
           </template>
@@ -191,7 +199,13 @@
           <template #default="{ row }">
             {{ row.disabledAccounts }}
             <span v-if="row.totalNumber > 0">
-              ({{ row.disabledAccounts === 0 ? '0%' : (row.disabledAccounts / row.totalNumber * 100).toFixed(2) + '%' }})
+              ({{
+                row.disabledAccounts === 0
+                  ? "0%"
+                  : ((row.disabledAccounts / row.totalNumber) * 100).toFixed(
+                    2
+                  ) + "%"
+              }})
             </span>
             <span v-else>0%</span>
           </template>
@@ -206,7 +220,12 @@
           <template #default="{ row }">
             {{ row.invalidAccounts }}
             <span v-if="row.totalNumber > 0">
-              ({{ row.invalidAccounts === 0 ? '0%' : (row.invalidAccounts / row.totalNumber * 100).toFixed(2) + '%' }})
+              ({{
+                row.invalidAccounts === 0
+                  ? "0%"
+                  : ((row.invalidAccounts / row.totalNumber) * 100).toFixed(2) +
+                    "%"
+              }})
             </span>
             <span v-else>0%</span>
           </template>
@@ -215,13 +234,18 @@
         <el-table-column
           align="left"
           label="检测失败"
-          min-width="130"
+          min-width="120"
           prop="failedAccounts"
         >
           <template #default="{ row }">
             {{ row.failedAccounts }}
             <span v-if="row.totalNumber > 0">
-              ({{ row.failedAccounts === 0 ? '0%' : (row.failedAccounts / row.totalNumber * 100).toFixed(2) + '%' }})
+              ({{
+                row.failedAccounts === 0
+                  ? "0%"
+                  : ((row.failedAccounts / row.totalNumber) * 100).toFixed(2) +
+                    "%"
+              }})
             </span>
             <span v-else>0%</span>
           </template>
@@ -229,7 +253,7 @@
         <el-table-column
           align="left"
           label="总数"
-          min-width="100"
+          min-width="90"
           prop="totalNumber"
         >
           <template #default="{ row }">
@@ -248,6 +272,9 @@
           min-width="180"
           prop="createdAt"
           sortable="custom"
+          :formatter="
+            (row) => dayjs(row.createdAt).format('YYYY-MM-DD HH:mm:ss')
+          "
         />
         <el-table-column
           align="left"
@@ -255,6 +282,9 @@
           min-width="180"
           prop="updatedAt"
           sortable="custom"
+          :formatter="
+            (row) => dayjs(row.updatedAt).format('YYYY-MM-DD HH:mm:ss')
+          "
         />
         <el-table-column
           align="left"
@@ -265,7 +295,6 @@
           <template #default="scope">
             <!-- Button Group Container -->
             <div class="button-group">
-
               <el-button
                 type="warning"
                 link
@@ -279,7 +308,6 @@
               >
                 <el-button
                   class="button-with-icon-right ml-3 text-gray-500"
-
                   link
                 >更多操作</el-button>
                 <template #dropdown>
@@ -312,6 +340,7 @@
                     >下载无效账号</el-dropdown-item>
                     <el-dropdown-item @click="downloadAll(scope.row)">下载正常及封禁账号</el-dropdown-item>
                     <el-dropdown-item @click="downloadFailed(scope.row)">下载检测失败账号</el-dropdown-item>
+                    <el-dropdown-item @click="downloadOrigin(scope.row)">下载原始文件</el-dropdown-item>
                   </el-dropdown-menu>
                 </template>
               </el-dropdown>
@@ -338,7 +367,7 @@
       draggable
       :show-close="false"
     >
-      <template #header="{ close, titleId}">
+      <template #header="{ close, titleId }">
         <div class="h-10 flex justify-between">
           <h4
             :id="titleId"
@@ -421,6 +450,7 @@
           <el-upload
             ref="uploadRef"
             class="upload-demo w-full"
+            :file-list="fileList"
             :on-change="handleUploadChange"
             :before-upload="() => false"
             :auto-upload="false"
@@ -469,13 +499,14 @@ import {
   downloadInvalidAccounts,
   downloadAllAccounts,
   downloadFailedAccounts,
+  downloadOriginFile,
 } from '@/api/sieve'
 import { getAvailableConcurrency } from '@/api/user'
 import { getCountryInfoList } from '@/api/country'
-import { formatTimeToStr } from '@/utils/date'
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { CircleCloseFilled } from '@element-plus/icons-vue'
+import dayjs from 'dayjs'
 
 const handleClose = () => {
   drawer.value = false
@@ -522,12 +553,12 @@ const selectRefreshTime = (time) => {
 const controlRefresh = (isEnableRefresh) => {
   if (isEnableRefresh) {
     if (refreshTime.value !== undefined) {
-      stopAutoRefresh()
+      stopAutoRefresh() // 确保在开启前，先停止之前的定时器
       startAutoRefresh()
     }
   } else {
     stopAutoRefresh()
-    refreshTime.value = 5000
+    refreshTime.value = 5000 // 重置为默认值
     ElMessage.info('自动刷新已关闭')
   }
 }
@@ -569,17 +600,8 @@ const getTableData = async(sortProp, sortOrder) => {
 
   const table = await getSieveTaskList(params)
   if (table.code === 0) {
-    tableData.value = []
+    // tableData.value = []
     setTimeout(() => {
-      table.data.list.forEach((item) => {
-        item.createdAt = item.createdAt
-          ? formatTimeToStr(item.createdAt, 'yyyy-MM-dd hh:mm:ss')
-          : ''
-        item.updatedAt = item.updatedAt
-          ? formatTimeToStr(item.updatedAt, 'yyyy-MM-dd hh:mm:ss')
-          : ''
-      })
-
       tableData.value = table.data.list
     }, 100)
     total.value = table.data.total
@@ -735,13 +757,11 @@ const initForm = () => {
   refreshCountryInfoList()
 
   // 重置 form 对象以匹配默认值
-  form.value = {
-    taskName: '',
-    country_id: null,
-    concurrency: null,
-    file: null,
-    immediate: true, // 默认为立即开始
-  }
+  form.taskName = ''
+  form.country_id = null
+  form.concurrency = null
+  form.file = null
+  form.immediate = true
 }
 
 const rules = {
@@ -779,6 +799,7 @@ const submitForm = async() => {
         concurrencyInfo.value.currentConcurrency - form.concurrency
       setTimeout(() => {
         getTableData()
+        resetForm()
       }, 500)
       handleClose()
     }
@@ -790,6 +811,8 @@ const submitForm = async() => {
 const resetForm = () => {
   if (formRef.value) {
     formRef.value.resetFields()
+    fileList.value = [] // 清空文件列表
+    form.file = null // 清空文件字段
   }
 }
 
@@ -984,6 +1007,10 @@ const downloadFailed = async(row) => {
   await downloadFile(downloadFailedAccounts, row)
 }
 
+const downloadOrigin = async(row) => {
+  await downloadFile(downloadOriginFile, row)
+}
+
 const concurrencyInfo = ref({
   concurrencyLimit: 0,
   currentConcurrency: 0,
@@ -1156,7 +1183,7 @@ const batchDelete = () => {
     })
 }
 
-const batchRecover = () => {
+const batchPause = () => {
   // 显示确认对话框
   ElMessageBox.confirm('确认要暂停选中的行数据吗？', '批量暂停', {
     confirmButtonText: '确定',
@@ -1190,9 +1217,9 @@ const batchRecover = () => {
     })
 }
 
-const batchPause = () => {
+const batchRecover = () => {
   // 显示确认对话框
-  ElMessageBox.confirm('确认要暂停选中的行数据吗？', '批量暂停', {
+  ElMessageBox.confirm('确认要暂停选中的行数据吗？', '批量恢复', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning',
@@ -1273,5 +1300,4 @@ const batchPause = () => {
     transform: rotate(360deg);
   }
 }
-
 </style>

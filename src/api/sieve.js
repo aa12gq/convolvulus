@@ -103,3 +103,11 @@ export const downloadFailedAccounts = (taskId) => {
     responseType: 'blob', // 确保响应类型为 blob，这样才能处理文件流
   })
 }
+
+export const downloadOriginFile = (taskId) => {
+  return service({
+    url: `/sieveTask/downloadOriginFile/${String(taskId)}`,
+    method: 'get',
+    responseType: 'blob',
+  })
+}
