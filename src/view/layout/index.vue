@@ -408,6 +408,8 @@ const remainingTime = computed(() => {
     // 已过期，计算过期天数
     const days = Math.ceil(Math.abs(diff) / (1000 * 60 * 60 * 24))
     color = 'danger' // 红色
+    // 移除本地存储的'token'
+    window.localStorage.removeItem('token')
     return { days, expired: true, color }
   } else {
     // 将差值转换为天数、小时、分钟和秒数
