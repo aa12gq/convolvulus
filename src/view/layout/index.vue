@@ -21,7 +21,7 @@
         >
           <div
             v-if="isSider"
-            class="inline-flex font-mono font-bold text-3xl"
+            class="inline-flex font-mono font-bold text-3xl "
             :style="{ color: textColor }"
           >
             {{ $GIN_VUE_ADMIN.appName }}
@@ -101,7 +101,14 @@
                           :type="remainingTime.color"
                           class="max-h-fit mr-6"
                         >
-                          到期时间:{{ remainingTime.expired ? '已过期' + remainingTime.days + '天' : remainingTime.days + '天' }}
+                          到期时间:
+                          {{
+                            remainingTime.expired
+                              ? '已过期' + remainingTime.days + '天'
+                              : remainingTime.days >= 1
+                                ? remainingTime.days + '天'
+                                : remainingTime.hours + '小时' + remainingTime.minutes + '分' + remainingTime.seconds + '秒'
+                          }}
                         </el-button>
                         <!-- <el-switch
                           v-model="theme"
@@ -171,7 +178,7 @@
             v-loading="loadingFlag"
             element-loading-text="刷新中"
             :element-loading-svg="svg"
-    class="custom-loading-svg"
+            class="custom-loading-svg"
             element-loading-background="rgba(0, 0, 0, 0)"
           >
 
@@ -331,13 +338,14 @@ const textColor = computed(() => {
 })
 
 const backgroundColor = computed(() => {
-  if (userStore.sideMode === 'dark') {
-    return '#2D2A2F'
-  } else if (userStore.sideMode === 'light') {
-    return '#fff'
-  } else {
-    return userStore.sideMode
-  }
+  // if (userStore.sideMode === 'dark') {
+  //   return '#428BE9'
+  // } else if (userStore.sideMode === 'light') {
+  //   return '#428BE9'
+  // } else {
+  //   return userStore.sideMode
+  // }
+  return '#fff'
 })
 
 const matched = computed(() => route.meta.matched)
@@ -402,13 +410,15 @@ const remainingTime = computed(() => {
     color = 'danger' // 红色
     return { days, expired: true, color }
   } else {
-    // 将差值转换为天数和秒数
+    // 将差值转换为天数、小时、分钟和秒数
     const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-    const seconds = Math.floor((diff % (1000 * 60 * 60 * 24)) / 1000)
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000)
     if (days <= 15) {
       color = 'warning' // 黄色
     }
-    return { days, seconds, expired: false, color }
+    return { days, hours, minutes, seconds, expired: false, color }
   }
 })
 

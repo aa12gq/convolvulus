@@ -1,6 +1,6 @@
 <template>
-  <div class="">
-    <!-- <warning-bar title="注：批量筛号" /> -->
+  <div class="box">
+    <warning-bar title="注意：为确保系统顺畅运行，我们采用了先进的性能优化技术。系统将定期自动清理当天的账号检测信息，以保障高效稳定的服务。请您及时下载并妥善保存信息，感谢您的理解与支持" />
     <div class="gva-table-box">
       <div class="gva-btn-list">
         <!-- 按钮区域 -->
@@ -36,11 +36,11 @@
             @keyup.enter.native="searchTask"
           />
           <el-button
-            class="bg-[#4773C5] text-gray-100"
+            class="bg-[#4773C5] text-gray-100 hover:bg-[#729cea] active:bg-[#729cea] active:transform active:!scale-90 active:!shadow-lg "
             @click="searchTask"
           >查询</el-button>
           <el-button
-            class="bg-[#4773C5] text-gray-100"
+            class="bg-[#4773C5] text-gray-100 hover:bg-[#729cea] active:bg-[#729cea] active:transform active:!scale-90 active:!shadow-lg "
             @click="
               () => {
                 openDialog('add');
@@ -73,7 +73,7 @@
           批量删除
         </el-Button>
         <el-Button
-          class="bg-[#4773C5] text-gray-100"
+          class="bg-[#4773C5] text-gray-100 hover:bg-[#729cea] active:bg-[#729cea] active:transform active:!scale-90 active:!shadow-lg "
           @click="getTableData"
         >刷新一下</el-Button>
         <div class="ml-auto space-x-2">
@@ -400,7 +400,7 @@
             placeholder="请输入任务名称"
           />
         </el-form-item>
-        <el-form-item
+        <!-- <el-form-item
           label="国家区号"
           prop="country_id"
         >
@@ -417,7 +417,7 @@
               :value="item.ID"
             />
           </el-select>
-        </el-form-item>
+        </el-form-item> -->
         <el-form-item
           label="并发数"
           prop="concurrency"
@@ -473,15 +473,18 @@
 
         <el-form-item>
           <el-button
-            class="w-[7rem] rounded bg-[#4773C5] text-gray-100"
+            v-preReClick
+            type="primary"
+            class="w-[7rem] cursor-pointer text-gray-100 button-click-effect"
             @click="submitForm"
           >添加</el-button>
           <el-button
             color="#DEDCD2"
-            class="w-[7rem] rounded ml-2"
+            class="w-[7rem] rounded ml-2 button-click-effect"
             @click="resetForm"
           >清空</el-button>
         </el-form-item>
+
       </el-form>
     </el-dialog>
   </div>
@@ -506,6 +509,7 @@ import { getCountryInfoList } from '@/api/country'
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { CircleCloseFilled } from '@element-plus/icons-vue'
+import WarningBar from '@/components/warningBar/warningBar.vue'
 import dayjs from 'dayjs'
 
 const handleClose = () => {
@@ -1249,7 +1253,7 @@ const batchRecover = () => {
 </script>
 
 <style lang="scss">
-.authority {
+.box {
   .el-input-number {
     margin-left: 15px;
     span {
@@ -1299,5 +1303,17 @@ const batchRecover = () => {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* 添加按钮的基础样式 */
+.button-click-effect {
+  transition: all 0.2s ease-in-out !important; /* 添加过渡效果使点击动画更平滑 */
+  outline: none; /* 去除点击时的轮廓线 */
+}
+
+/* 定义按钮被点击时的样式 */
+.button-click-effect:active {
+  box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125) !important; /* 按钮内部添加阴影，产生按下的效果 */
+  transform: translateY(3px) !important; /* 按钮按下时轻微下移，增加真实感 */
 }
 </style>
