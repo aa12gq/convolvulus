@@ -1,6 +1,8 @@
 <template>
   <div class="box">
-    <warning-bar title="注意：为确保系统顺畅运行，我们采用了先进的性能优化技术。系统将定期自动清理当天的账号检测信息，以保障高效稳定的服务。请您及时下载并妥善保存信息，感谢您的理解与支持" />
+    <warning-bar
+      title="注意：为确保系统顺畅运行，我们采用了先进的性能优化技术。系统将定期自动清理当天的账号检测信息，以保障高效稳定的服务。请您及时下载并妥善保存信息，感谢您的理解与支持"
+    />
     <div class="gva-table-box">
       <div class="gva-btn-list">
         <!-- 按钮区域 -->
@@ -36,11 +38,11 @@
             @keyup.enter.native="searchTask"
           />
           <el-button
-            class="bg-[#4773C5] text-gray-100 hover:bg-[#729cea] active:bg-[#729cea] active:transform active:!scale-90 active:!shadow-lg "
+            class="bg-[#4773C5] text-gray-100 hover:bg-[#729cea] active:bg-[#729cea] active:transform active:!scale-90 active:!shadow-lg"
             @click="searchTask"
           >查询</el-button>
           <el-button
-            class="bg-[#4773C5] text-gray-100 hover:bg-[#729cea] active:bg-[#729cea] active:transform active:!scale-90 active:!shadow-lg "
+            class="bg-[#4773C5] text-gray-100 hover:bg-[#729cea] active:bg-[#729cea] active:transform active:!scale-90 active:!shadow-lg"
             @click="
               () => {
                 openDialog('add');
@@ -73,7 +75,7 @@
           批量删除
         </el-Button>
         <el-Button
-          class="bg-[#4773C5] text-gray-100 hover:bg-[#729cea] active:bg-[#729cea] active:transform active:!scale-90 active:!shadow-lg "
+          class="bg-[#4773C5] text-gray-100 hover:bg-[#729cea] active:bg-[#729cea] active:transform active:!scale-90 active:!shadow-lg"
           @click="getTableData"
         >刷新一下</el-Button>
         <div class="ml-auto space-x-2">
@@ -474,6 +476,7 @@
         <el-form-item>
           <el-button
             v-preReClick
+            :disabled="isShowProgress"
             type="primary"
             class="w-[7rem] cursor-pointer text-gray-100 button-click-effect"
             @click="submitForm"
@@ -484,8 +487,11 @@
             @click="resetForm"
           >清空</el-button>
         </el-form-item>
-
       </el-form>
+      <el-progress
+        v-if="isShowProgress"
+        :percentage="loadingProgress"
+      />
     </el-dialog>
   </div>
 </template>
@@ -517,7 +523,8 @@ const handleClose = () => {
 }
 
 const drawer = ref(false)
-
+const loadingProgress = ref(0)
+const isShowProgress = ref(false)
 const page = ref(1)
 const total = ref(0)
 const pageSize = ref(10)
@@ -784,6 +791,30 @@ const submitForm = async() => {
   const valid = await formRef.value.validate()
   if (!valid) return
 
+  isShowProgress.value = true
+  loadingProgress.value = 0 // 初始化进度条
+
+  // 快速模拟上传进度
+  const intervalId = setInterval(() => {
+    if (loadingProgress.value < 100) {
+      loadingProgress.value += 20 // 加快进度条速度
+    } else {
+      // 进度完成后立即清除定时器并关闭弹窗
+      clearInterval(intervalId)
+      loadingProgress.value = 100 // 确保进度条完成
+      closeDialogImmediately() // 立即关闭弹窗
+    }
+  }, 500) // 缩短间隔时间加快进度
+
+  // 立即关闭弹窗的方法，定义在 submitForm 内部以访问 intervalId 和其他方法
+  function closeDialogImmediately() {
+    clearInterval(intervalId) // 确保清除定时器
+    loadingProgress.value = 100 // 完成进度条
+    closeDialog() // 关闭弹窗
+    isShowProgress.value = false // 隐藏进度条
+    getTableData() // 刷新列表
+  }
+
   const formData = new FormData()
   formData.append('taskName', form.taskName)
   formData.append('concurrency', form.concurrency)
@@ -796,16 +827,16 @@ const submitForm = async() => {
 
   try {
     const response = await createSieveTask(formData)
+
     if (response && response.code === 0) {
-      closeDialog()
       ElMessage.success('提交成功！')
-      concurrencyInfo.value.currentConcurrency =
-        concurrencyInfo.value.currentConcurrency - form.concurrency
+      concurrencyInfo.value.currentConcurrency -= form.concurrency
+
       setTimeout(() => {
-        getTableData()
         resetForm()
       }, 500)
-      handleClose()
+
+      handleClose && handleClose()
     }
   } catch (error) {
     ElMessage.error(error.message)
@@ -813,10 +844,13 @@ const submitForm = async() => {
 }
 
 const resetForm = () => {
+  // 如果 formRef 是有效的，重置表单字段
   if (formRef.value) {
     formRef.value.resetFields()
-    fileList.value = [] // 清空文件列表
-    form.file = null // 清空文件字段
+
+    // 清空文件列表和文件字段
+    fileList.value = []
+    form.file = null
   }
 }
 
