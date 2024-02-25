@@ -123,19 +123,36 @@
         />
         <el-table-column
           label="ID"
-          width="100"
+          width="60"
           prop="ID"
         />
         <el-table-column
           align="left"
           label="任务名称"
-          min-width="140"
+          min-width="120"
           prop="taskName"
-        />
+        >
+          <template #default="scope">
+            <el-tooltip
+              class="item"
+              effect="dark"
+              :content="scope.row.taskName"
+              placement="top"
+            >
+              <div class="text-ellipsis">
+                {{
+                  scope.row.taskName.length > 6
+                    ? scope.row.taskName.substr(0,6) + "..."
+                    : scope.row.taskName
+                }}
+              </div>
+            </el-tooltip>
+          </template>
+        </el-table-column>
         <el-table-column
           align="left"
           label="文件名称"
-          min-width="180"
+          min-width="120"
           prop="file_name"
         >
           <template #default="scope">
@@ -265,7 +282,7 @@
         <el-table-column
           align="left"
           label="并发数"
-          min-width="100"
+          min-width="80"
           prop="concurrency"
         />
         <el-table-column
@@ -1165,7 +1182,7 @@ const columns = [
 const getStatusTag = (status) => {
   switch (status) {
     case 'Init':
-      return '#fffdf1'
+      return 'gray'
     case 'Pending':
       return '#fffdf1'
     case 'Success':

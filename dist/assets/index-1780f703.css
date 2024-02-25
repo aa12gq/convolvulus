@@ -1,4 +1,0 @@
-/*! 
- Build based on gin-vue-admin 
- Time : 1705492673000 */
-.authority .el-input-number{margin-left:15px}.authority .el-input-number span{display:none}.tree-content{margin-top:10px;height:calc(100vh - 158px);overflow:auto}.button-group{display:flex;align-items:center}.el-button-like{line-height:normal;color:#409eff;padding:0;border:none;background:none}.el-button-like .el-button{padding:0;margin-right:10px}.el-button-like .el-button:focus,.el-button-like .el-button:hover{color:#66b1ff;background:none;border-color:transparent}.rotate{animation:rotate 1s linear infinite}@keyframes rotate{0%{transform:rotate(0)}to{transform:rotate(360deg)}}
