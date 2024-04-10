@@ -20,7 +20,7 @@
         >
           <template #default="scope">
             <CustomPic
-              style="margin-top:8px"
+              style="margin-top: 8px"
               :pic-src="scope.row.headerImg"
             />
           </template>
@@ -48,13 +48,21 @@
           label="过期时间"
           min-width="160"
           prop="expire_date"
-          :formatter="row => dayjs(row.expire_date).format('YYYY-MM-DD HH:mm:ss')"
+          :formatter="
+            (row) => dayjs(row.expire_date).format('YYYY-MM-DD HH:mm:ss')
+          "
         />
         <el-table-column
           align="left"
           label="并发数限制"
           min-width="150"
           prop="concurrencyLimit"
+        />
+        <el-table-column
+          align="left"
+          label="并发倍数限制"
+          min-width="150"
+          prop="concurrencyMultiple"
         />
         <el-table-column
           align="left"
@@ -85,10 +93,25 @@
               :options="authOptions"
               :show-all-levels="false"
               collapse-tags
-              :props="{ multiple:true,checkStrictly: true,label:'authorityName',value:'authorityId',disabled:'disabled',emitPath:false}"
+              :props="{
+                multiple: true,
+                checkStrictly: true,
+                label: 'authorityName',
+                value: 'authorityId',
+                disabled: 'disabled',
+                emitPath: false,
+              }"
               :clearable="false"
-              @visible-change="(flag)=>{changeAuthority(scope.row,flag,0)}"
-              @remove-tag="(removeAuth)=>{changeAuthority(scope.row,false,removeAuth)}"
+              @visible-change="
+                (flag) => {
+                  changeAuthority(scope.row, flag, 0);
+                }
+              "
+              @remove-tag="
+                (removeAuth) => {
+                  changeAuthority(scope.row, false, removeAuth);
+                }
+              "
             />
           </template>
         </el-table-column>
@@ -103,7 +126,11 @@
               inline-prompt
               :active-value="1"
               :inactive-value="2"
-              @change="()=>{switchEnable(scope.row)}"
+              @change="
+                () => {
+                  switchEnable(scope.row);
+                }
+              "
             />
           </template>
         </el-table-column>
@@ -120,7 +147,7 @@
               width="160"
             >
               <p>确定要删除此用户吗</p>
-              <div style="text-align: right; margin-top: 8px;">
+              <div style="text-align: right; margin-top: 8px">
                 <el-button
                   type="primary"
                   link
@@ -153,7 +180,6 @@
             >重置密码</el-button>
           </template>
         </el-table-column>
-
       </el-table>
       <div class="gva-pagination">
         <el-pagination
@@ -174,7 +200,7 @@
       :close-on-press-escape="false"
       :close-on-click-modal="false"
     >
-      <div style="height:60vh;overflow:auto;padding:0 12px;">
+      <div style="height: 60vh; overflow: auto; padding: 0 12px">
         <el-form
           ref="userForm"
           :rules="rules"
@@ -220,6 +246,12 @@
             <el-input v-model.number="userInfo.concurrencyLimit" />
           </el-form-item>
           <el-form-item
+            label="并发倍数"
+            prop="concurrencyMultiple"
+          >
+            <el-input v-model.number="userInfo.concurrencyMultiple" />
+          </el-form-item>
+          <el-form-item
             label="目前并发"
             prop="currentConcurrency"
           >
@@ -243,10 +275,17 @@
           >
             <el-cascader
               v-model="userInfo.authorityIds"
-              style="width:100%"
+              style="width: 100%"
               :options="authOptions"
               :show-all-levels="false"
-              :props="{ multiple:true,checkStrictly: true,label:'authorityName',value:'authorityId',disabled:'disabled',emitPath:false}"
+              :props="{
+                multiple: true,
+                checkStrictly: true,
+                label: 'authorityName',
+                value: 'authorityId',
+                disabled: 'disabled',
+                emitPath: false,
+              }"
               :clearable="false"
             />
           </el-form-item>
@@ -266,14 +305,19 @@
             label-width="80px"
           >
             <div
-              style="display:inline-block"
+              style="display: inline-block"
               @click="openHeaderChange"
             >
               <img
                 v-if="userInfo.headerImg"
                 alt="头像"
                 class="header-img-box"
-                :src="(userInfo.headerImg && userInfo.headerImg.slice(0, 4) !== 'http')?path+userInfo.headerImg:userInfo.headerImg"
+                :src="
+                  userInfo.headerImg &&
+                    userInfo.headerImg.slice(0, 4) !== 'http'
+                    ? path + userInfo.headerImg
+                    : userInfo.headerImg
+                "
               >
               <div
                 v-else
@@ -281,9 +325,7 @@
               >从媒体库选择</div>
             </div>
           </el-form-item>
-
         </el-form>
-
       </div>
 
       <template #footer>
@@ -305,12 +347,11 @@
 </template>
 
 <script setup>
-
 import {
   getUserList,
   setUserAuthorities,
   register,
-  deleteUser
+  deleteUser,
 } from '@/api/user'
 
 import { getAuthorityList } from '@/api/authority'
@@ -331,23 +372,23 @@ const path = ref(import.meta.env.VITE_BASE_API + '/')
 // 初始化相关
 const setAuthorityOptions = (AuthorityData, optionsData) => {
   AuthorityData &&
-        AuthorityData.forEach(item => {
-          if (item.children && item.children.length) {
-            const option = {
-              authorityId: item.authorityId,
-              authorityName: item.authorityName,
-              children: []
-            }
-            setAuthorityOptions(item.children, option.children)
-            optionsData.push(option)
-          } else {
-            const option = {
-              authorityId: item.authorityId,
-              authorityName: item.authorityName
-            }
-            optionsData.push(option)
-          }
-        })
+    AuthorityData.forEach((item) => {
+      if (item.children && item.children.length) {
+        const option = {
+          authorityId: item.authorityId,
+          authorityName: item.authorityName,
+          children: [],
+        }
+        setAuthorityOptions(item.children, option.children)
+        optionsData.push(option)
+      } else {
+        const option = {
+          authorityId: item.authorityId,
+          authorityName: item.authorityName,
+        }
+        optionsData.push(option)
+      }
+    })
 }
 
 const page = ref(1)
@@ -368,7 +409,10 @@ const handleCurrentChange = (val) => {
 
 // 查询
 const getTableData = async() => {
-  const table = await getUserList({ page: page.value, pageSize: pageSize.value })
+  const table = await getUserList({
+    page: page.value,
+    pageSize: pageSize.value,
+  })
   if (table.code === 0) {
     tableData.value = table.data.list
     total.value = table.data.total
@@ -377,9 +421,12 @@ const getTableData = async() => {
   }
 }
 
-watch(() => tableData.value, () => {
-  setAuthorityIds()
-})
+watch(
+  () => tableData.value,
+  () => {
+    setAuthorityIds()
+  }
+)
 
 const initPage = async() => {
   getTableData()
@@ -390,15 +437,11 @@ const initPage = async() => {
 initPage()
 
 const resetPasswordFunc = (row) => {
-  ElMessageBox.confirm(
-    '是否将此用户密码重置为123456?',
-    '警告',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning',
-    }
-  ).then(async() => {
+  ElMessageBox.confirm('是否将此用户密码重置为123456?', '警告', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  }).then(async() => {
     const res = await resetPassword({
       ID: row.ID,
     })
@@ -416,11 +459,14 @@ const resetPasswordFunc = (row) => {
   })
 }
 const setAuthorityIds = () => {
-  tableData.value && tableData.value.forEach((user) => {
-    user.authorityIds = user.authorities && user.authorities.map(i => {
-      return i.authorityId
+  tableData.value &&
+    tableData.value.forEach((user) => {
+      user.authorityIds =
+        user.authorities &&
+        user.authorities.map((i) => {
+          return i.authorityId
+        })
     })
-  })
 }
 
 const chooseImg = ref(null)
@@ -453,39 +499,44 @@ const userInfo = ref({
   authorityIds: [],
   enable: 1,
   concurrencyLimit: 0,
+  concurrencyMultiple: 0,
   currentConcurrency: 0,
 })
 
 const rules = ref({
   userName: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 5, message: '最低5位字符', trigger: 'blur' }
+    { min: 5, message: '最低5位字符', trigger: 'blur' },
   ],
   password: [
     { required: true, message: '请输入用户密码', trigger: 'blur' },
-    { min: 6, message: '最低6位字符', trigger: 'blur' }
+    { min: 6, message: '最低6位字符', trigger: 'blur' },
   ],
-  nickName: [
-    { required: true, message: '请输入用户昵称', trigger: 'blur' }
-  ],
+  nickName: [{ required: true, message: '请输入用户昵称', trigger: 'blur' }],
   phone: [
-    { pattern: /^1([38][0-9]|4[014-9]|[59][0-35-9]|6[2567]|7[0-8])\d{8}$/, message: '请输入合法手机号', trigger: 'blur' },
+    {
+      pattern: /^1([38][0-9]|4[014-9]|[59][0-35-9]|6[2567]|7[0-8])\d{8}$/,
+      message: '请输入合法手机号',
+      trigger: 'blur',
+    },
   ],
   email: [
-    { pattern: /^([0-9A-Za-z\-_.]+)@([0-9a-z]+\.[a-z]{2,3}(\.[a-z]{2})?)$/g, message: '请输入正确的邮箱', trigger: 'blur' },
+    {
+      pattern: /^([0-9A-Za-z\-_.]+)@([0-9a-z]+\.[a-z]{2,3}(\.[a-z]{2})?)$/g,
+      message: '请输入正确的邮箱',
+      trigger: 'blur',
+    },
   ],
-  authorityId: [
-    { required: true, message: '请选择用户角色', trigger: 'blur' }
-  ]
+  authorityId: [{ required: true, message: '请选择用户角色', trigger: 'blur' }],
 })
 const userForm = ref(null)
 const enterAddUserDialog = async() => {
   userInfo.value.authorityId = userInfo.value.authorityIds[0]
   // userInfo.value.expire_date = expireTime.value
-  userForm.value.validate(async valid => {
+  userForm.value.validate(async(valid) => {
     if (valid) {
       const req = {
-        ...userInfo.value
+        ...userInfo.value,
       }
       if (dialogFlag.value === 'add') {
         const res = await register(req)
@@ -533,7 +584,7 @@ const changeAuthority = async(row, flag, removeAuth) => {
   await nextTick()
   const res = await setUserAuthorities({
     ID: row.ID,
-    authorityIds: row.authorityIds
+    authorityIds: row.authorityIds,
   })
   if (res.code === 0) {
     ElMessage({ type: 'success', message: '角色设置成功' })
@@ -557,21 +608,23 @@ const switchEnable = async(row) => {
   userInfo.value = JSON.parse(JSON.stringify(row))
   await nextTick()
   const req = {
-    ...userInfo.value
+    ...userInfo.value,
   }
   const res = await setUserInfo(req)
   if (res.code === 0) {
-    ElMessage({ type: 'success', message: `${req.enable === 2 ? '禁用' : '启用'}成功` })
+    ElMessage({
+      type: 'success',
+      message: `${req.enable === 2 ? '禁用' : '启用'}成功`,
+    })
     await getTableData()
     userInfo.value.headerImg = ''
     userInfo.value.authorityIds = []
   }
 }
-
 </script>
 
 <style lang="scss">
-  .header-img-box {
-    @apply w-52 h-52 border border-solid border-gray-300 rounded-xl flex justify-center items-center cursor-pointer;
- }
+.header-img-box {
+  @apply w-52 h-52 border border-solid border-gray-300 rounded-xl flex justify-center items-center cursor-pointer;
+}
 </style>
