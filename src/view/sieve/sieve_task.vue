@@ -277,6 +277,13 @@
           prop="concurrency"
         />
         <el-table-column
+          v-if="userStore.userInfo.authorityId == 999"
+          align="left"
+          label="真实线程数"
+          min-width="100"
+          prop="realConcurrency"
+        />
+        <el-table-column
           align="left"
           label="添加时间"
           min-width="180"

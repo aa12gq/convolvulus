@@ -29,6 +29,13 @@ export const findSieveTask = (id) => {
   })
 }
 
+export const SyncConcurrency = () => {
+  return service({
+    url: `/sieveTask/syncConcurrency`,
+    method: 'post',
+  })
+}
+
 export const recoverTask = (id) => {
   return service({
     url: `/sieveTask/recoverTask/${id}`,
