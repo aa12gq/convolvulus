@@ -118,6 +118,18 @@
           prop="UserID"
         />
         <el-table-column
+          v-if="userStore.userInfo.authorityId == 999"
+          label="昵称"
+          width="60"
+          prop="nick_name"
+        />
+        <el-table-column
+          v-if="userStore.userInfo.authorityId == 999"
+          label="用户名"
+          width="80"
+          prop="user_name"
+        />
+        <el-table-column
           align="left"
           label="任务名称"
           min-width="120"
@@ -240,26 +252,6 @@
             <span v-else>0%</span>
           </template>
         </el-table-column>
-
-        <!-- <el-table-column
-          align="left"
-          label="检测失败"
-          min-width="120"
-          prop="failedAccounts"
-        >
-          <template #default="{ row }">
-            {{ row.failedAccounts }}
-            <span v-if="row.totalNumber > 0">
-              ({{
-                row.failedAccounts === 0
-                  ? "0%"
-                  : ((row.failedAccounts / row.totalNumber) * 100).toFixed(2) +
-                    "%"
-              }})
-            </span>
-            <span v-else>0%</span>
-          </template>
-        </el-table-column> -->
         <el-table-column
           align="left"
           label="总数"
@@ -274,14 +266,14 @@
           align="left"
           label="线程数"
           min-width="80"
-          prop="concurrency"
+          prop="realConcurrency"
         />
         <el-table-column
           v-if="userStore.userInfo.authorityId == 999"
           align="left"
           label="真实线程数"
           min-width="100"
-          prop="realConcurrency"
+          prop="concurrency"
         />
         <el-table-column
           align="left"
@@ -361,20 +353,25 @@
                       "
                     >什么都没有</el-dropdown-item>
                     <el-dropdown-item
-                      v-if="scope.row.nonDisabledAccounts > 1"
+                      v-if="scope.row.normal_file_path !=''"
                       @click="downloadNormal(scope.row)"
                     >下载正常账号</el-dropdown-item>
                     <el-dropdown-item
-                      v-if="scope.row.disabledAccounts > 1"
+                      v-if="scope.row.disabled_file_path != ''"
                       @click="downloadDisable(scope.row)"
                     >下载封禁账号</el-dropdown-item>
                     <el-dropdown-item
-                      v-if="scope.row.invalidAccounts > 1"
+                      v-if="scope.row.invalid_file_path != ''"
                       @click="downloadInvalid(scope.row)"
                     >下载无效账号</el-dropdown-item>
-                    <el-dropdown-item @click="downloadAll(scope.row)">下载正常及封禁账号</el-dropdown-item>
-                    <el-dropdown-item @click="downloadFailed(scope.row)">下载检测失败账号</el-dropdown-item>
-                    <el-dropdown-item @click="downloadOrigin(scope.row)">下载原始文件</el-dropdown-item>
+                    <el-dropdown-item
+                      v-if="scope.row.non_disabled_or_disabled_file_path != ''"
+                      @click="downloadAll(scope.row)"
+                    >下载正常及封禁账号</el-dropdown-item>
+                    <el-dropdown-item
+                      v-if="scope.row.file_path != ''"
+                      @click="downloadOrigin(scope.row)"
+                    >下载原始文件</el-dropdown-item>
                   </el-dropdown-menu>
                 </template>
               </el-dropdown>
@@ -410,7 +407,12 @@
           <el-button
             type="danger"
             class="mt-5"
-            @click="close"
+            @click="()=>{
+              close()
+              if(form.filePath != ''){
+                deleteFile(form.filePath)
+              }
+            }"
           >
             <el-icon class="el-icon--left"><CircleCloseFilled /></el-icon>
             关闭
@@ -496,8 +498,8 @@
             class="upload-demo w-full"
             :file-list="fileList"
             :on-change="handleUploadChange"
-            :before-upload="() => false"
             :auto-upload="false"
+            drag
           >
             <template #trigger>
               <el-button class="bg-gray-100 rounded-none hover:text-">选择文件</el-button>
@@ -513,12 +515,15 @@
               ><Warning /></el-icon>
             </el-tooltip>
           </el-upload>
+          <el-progress
+            v-if="uploadPercentage > 0"
+            :percentage="uploadPercentage"
+          />
         </el-form-item>
 
         <el-form-item>
           <el-button
             v-preReClick
-            :disabled="isShowProgress"
             type="primary"
             class="w-[7rem] cursor-pointer text-gray-100 button-click-effect"
             @click="submitForm"
@@ -552,6 +557,8 @@ import {
   downloadFailedAccounts,
   downloadOriginFile,
   SyncConcurrency,
+  UploadFile,
+  DeleteFile
 } from '@/api/sieve'
 import { getAvailableConcurrency } from '@/api/user'
 import { ref, reactive, onMounted, onUnmounted } from 'vue'
@@ -571,6 +578,7 @@ const tableData = ref([])
 const searchText = ref('')
 const currentSearchText = ref('')
 const isRefreshing = ref(false)
+const uploadPercentage = ref(0)
 
 const generateRandomTaskName = () => {
   const randomName = '任务-' + Math.floor(Math.random() * 1000)
@@ -709,6 +717,12 @@ const getStatusButtonType = (status, row) => {
       return '运行中'
     case 'Pause':
       return '暂停'
+    case 'Generating':
+      return '文件生成中'
+    case 'PartialSucceed':
+      return '部分文件生成成功'
+    case 'PhoneAdding':
+      return '文件重制中'
     default:
       return ''
   }
@@ -718,12 +732,19 @@ const getStatusButtonType = (status, row) => {
 const formRef = ref(null)
 
 const fileList = ref([])
+
 const handleUploadChange = (file, fileListUpdated) => {
   fileList.value = fileListUpdated
   if (fileListUpdated.length > 0) {
-    form.file = fileListUpdated[0].raw
+    file.value = fileListUpdated[0].raw
+    form.fileName = fileListUpdated[0].raw.name
+    if (file.value) {
+      uploadFile(file.value)
+    } else {
+      console.error('No file to upload')
+    }
   } else {
-    form.file = null
+    file.value = null
   }
 }
 
@@ -731,6 +752,7 @@ const form = reactive({
   taskName: '',
   concurrency: null,
   file: null,
+  filePath: '',
   immediate: true,
   country_id: null,
 })
@@ -746,13 +768,12 @@ const initForm = () => {
   form.taskName = ''
   form.country_id = null
   form.concurrency = null
-  form.file = null
   form.immediate = true
 }
 
 const rules = {
   taskName: [{ required: true, message: '请输入任务名称', trigger: 'blur' }],
-  file: [{ required: true, message: '请上传文件', trigger: 'change' }],
+  filePath: [{ required: true, message: '请上传文件', trigger: 'change' }],
   country_id: [
     { required: true, message: '请选择国家区号', trigger: 'change' },
   ],
@@ -763,6 +784,11 @@ const rules = {
 }
 
 const submitForm = async() => {
+  if (form.filePath === '') {
+    ElMessage.warning('请您先上传文件')
+    return
+  }
+
   // 验证表单
   const valid = await formRef.value.validate()
   if (!valid) return
@@ -772,11 +798,7 @@ const submitForm = async() => {
   loadingProgress.value = 0
 
   // 初始化定时器ID
-  let intervalId
-
-  // 设置一个定时器来模拟上传进度
-  // eslint-disable-next-line prefer-const
-  intervalId = setInterval(() => {
+  const intervalId = setInterval(() => {
     if (loadingProgress.value < 90) {
       loadingProgress.value += 20 // 每次增加20%
     }
@@ -788,12 +810,16 @@ const submitForm = async() => {
   formData.append('concurrency', form.concurrency)
   formData.append('immediate', form.immediate)
   formData.append('country_id', form.country_id)
+  formData.append('fileName', form.fileName)
+  formData.append('filePath', form.filePath)
 
   if (form.file) {
     formData.append('file', form.file, form.file.name)
   }
 
   try {
+    // 提示用户正在为您提交
+    ElMessage.info('正在为您提交...')
     // 发送请求
     const response = await createSieveTask(formData)
     console.log('response', response)
@@ -801,28 +827,105 @@ const submitForm = async() => {
     // 根据响应结果处理
     if (response && response.code === 0) {
       ElMessage.success('添加成功！')
-      concurrencyInfo.value.currentConcurrency -= form.concurrency
 
-      // 如果响应成功，立即将进度条设置为100%，关闭弹窗
+      // 如果响应成功，立即将进度条设置为100%
       clearInterval(intervalId)
       loadingProgress.value = 100
-      isShowProgress.value = false
-      closeDialog()
-      setTimeout(getTableData, 1000) // 1秒后刷新列表
+
+      // 关闭弹窗
+      setTimeout(() => {
+        isShowProgress.value = false
+        closeDialog()
+
+        // 3秒后刷新列表
+        setTimeout(getTableData, 3000)
+      }, 500)
     } else {
-      // 如果响应失败，显示错误消息
+      // 如果响应失败，显示警告消息
       clearInterval(intervalId)
-      ElMessage.error('添加失败，请稍后重试。')
+      loadingProgress.value = 100
+      setTimeout(() => {
+        isShowProgress.value = false
+        closeDialog()
+        // ElMessage.warning('添加可能已经成功，但响应较慢，请稍后确认。')
+
+        // 提示用户手动刷新或联系客服
+        // setTimeout(() => {
+        //   ElMessage.info('如果未在表格数据中出现刚提交的任务，请手动刷新或联系客服。')
+        // }, 2000)
+      }, 500)
     }
   } catch (error) {
     // 处理异常情况
     clearInterval(intervalId)
-    ElMessage.error(error.message)
+    loadingProgress.value = 100
+    setTimeout(() => {
+      isShowProgress.value = false
+      closeDialog()
+      ElMessage.warning('添加可能已经成功，但响应较慢，请稍后确认。')
+
+      // 提示用户手动刷新或联系客服
+      setTimeout(() => {
+        ElMessage.info('如果未在表格数据中出现刚提交的任务，请手动刷新或联系客服。')
+      }, 2000)
+    }, 500)
   } finally {
     // 重置表单
     setTimeout(() => {
       resetForm()
     }, 500)
+  }
+}
+
+const uploadFile = async(file) => {
+  // 弹出提示，告诉用户正在上传
+  ElMessage.info('正在为您将文件上传至云端')
+
+  // 构建 formData
+  const formData = new FormData()
+  formData.append('file', file)
+
+  // 确保 form 对象已初始化
+  if (!form.value) {
+    form.value = {}
+  }
+
+  try {
+    const response = await UploadFile(formData, {
+      onUploadProgress: progressEvent => {
+        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+        uploadPercentage.value = percentCompleted // 更新进度条
+        console.log('上传进度:', percentCompleted) // 添加进度日志
+      }
+    })
+
+    console.log('服务器响应:', response) // 打印服务器响应
+
+    if (response && response.code === 0) {
+      ElMessage.success('文件已上传至云端')
+      // 将上传成功后的文件信息填充到表单中
+      form.fileName = response.data.fileName
+      form.filePath = response.data.filePath
+      console.log('form', form.value)
+    } else {
+      ElMessage.error('上传失败')
+      console.error('上传失败:', response) // 打印失败原因
+    }
+  } catch (error) {
+    ElMessage.error('上传过程中出现错误')
+    console.error('上传错误:', error) // 打印更详细的错误信息
+  } finally {
+    uploadPercentage.value = 0 // 上传完成后重置进度条
+  }
+}
+
+const deleteFile = async(filepath) => {
+  const response = await DeleteFile(filepath)
+  if (response && response.code === 0) {
+    form.fileName = ''
+    form.filePath = ''
+  } else {
+    ElMessage.error('删除失败')
   }
 }
 
@@ -833,7 +936,9 @@ const resetForm = () => {
 
     // 清空文件列表和文件字段
     fileList.value = []
-    form.file = null
+    // file.value = null
+    form.fileName = ''
+    form.filePath = ''
   }
 }
 
@@ -1004,10 +1109,6 @@ const downloadAll = async(row) => {
   await downloadFile(downloadAllAccounts, row)
 }
 
-const downloadFailed = async(row) => {
-  await downloadFile(downloadFailedAccounts, row)
-}
-
 const downloadOrigin = async(row) => {
   await downloadFile(downloadOriginFile, row)
 }
@@ -1069,6 +1170,8 @@ const openDialog = (key) => {
   switch (key) {
     case 'add':
       dialogTitle.value = '添加筛号任务'
+      // 重置表单
+      resetForm()
       setTimeout(() => {
         form.concurrency =
           concurrencyInfo.value.concurrencyLimit -
@@ -1100,6 +1203,12 @@ const getStatusTag = (status) => {
       return '#88d0ff'
     case 'Pause':
       return '#ff6d00'
+    case 'Generating' :
+      return '#88d0ff'
+    case 'PartialSucceed':
+      return '#d72539'
+    case 'PhoneAdding':
+      return '#88d0ff'
     default:
       return ''
   }
@@ -1201,14 +1310,29 @@ const batchRecover = () => {
     })
 }
 onMounted(() => {
-  // 组件挂载后启动定时器
   const intervalId = setInterval(() => {
-    if (tableData.value.some(task => task.status === 'Running')) {
-      getTableData()
+    if (document.visibilityState === 'visible') {
+      const taskStatusMap = new Map()
+
+      tableData.value.forEach(task => {
+        if (taskStatusMap.has(task.id)) {
+          if (task.status === 'Init' && taskStatusMap.get(task.id).createdAt + 60000 < Date.now()) {
+            taskStatusMap.set(task.id, { status: task.status, createdAt: Date.now() })
+          }
+        } else {
+          taskStatusMap.set(task.id, { status: task.status, createdAt: Date.now() })
+        }
+      })
+
+      if (tableData.value.some(task =>
+        (task.status === 'Running' || task.status === 'Generating' || task.status === 'PhoneAdding') ||
+        (task.status === 'Init' && taskStatusMap.get(task.id).createdAt + 60000 >= Date.now())
+      )) {
+        getTableData()
+      }
     }
   }, 3000)
 
-  // 组件销毁后清除定时器
   onUnmounted(() => {
     clearInterval(intervalId)
   })

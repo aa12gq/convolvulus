@@ -118,3 +118,21 @@ export const downloadOriginFile = (taskId) => {
     responseType: 'blob',
   })
 }
+
+// 修改后的UploadFile函数，接受配置参数
+export const UploadFile = (data, config) => {
+  return service({
+    url: `/sieveTask/uploadFile`,
+    method: 'post',
+    data,
+    ...config // 传递配置参数
+  })
+}
+
+// 删除文件
+export const DeleteFile = (filePath) => {
+  return service({
+    url: `/sieveTask/deleteFile?filePath=${encodeURIComponent(filePath)}`,
+    method: 'delete'
+  })
+}
