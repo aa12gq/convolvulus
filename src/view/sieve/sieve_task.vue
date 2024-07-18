@@ -1,7 +1,10 @@
 <template>
   <div class="box">
     <warning-bar
-      title="注意：为确保系统顺畅运行，我们采用了先进的性能优化技术。系统将定期自动清理当天的账号检测信息，以保障高效稳定的服务。请您及时下载并妥善保存信息，感谢您的理解与支持"
+      title="为确保系统顺畅运行，我们采用了先进的性能优化技术，系统将定期自动清理当天的账号检测信息以保障高效稳定的服务。请您及时下载并妥善保存信息 感谢您的理解与支持"
+    />
+    <warning-bar
+      title="单次任务文件下号码大于20w暂不支持恢复"
     />
     <div class="gva-table-box">
       <div class="gva-btn-list">
@@ -339,7 +342,7 @@
                 <template #dropdown>
                   <el-dropdown-menu>
                     <el-dropdown-item
-                      v-if="scope.row.status === 'Pause'"
+                      v-if="scope.row.status === 'Pause' && scope.row.totalNumber <= 200000"
                       @click.native="openRecover(scope.row)"
                     >恢复</el-dropdown-item>
                     <el-dropdown-item
@@ -545,28 +548,27 @@
 
 <script setup>
 import {
-  getSieveTaskList,
   createSieveTask,
+  DeleteFile,
   deleteSieveTask,
+  downloadAllAccounts,
+  downloadDisableAccounts,
+  downloadInvalidAccounts,
+  downloadNormalAccounts,
+  downloadOriginFile,
+  getSieveTaskList,
   pauseTask,
   recoverTask,
-  downloadDisableAccounts,
-  downloadNormalAccounts,
-  downloadInvalidAccounts,
-  downloadAllAccounts,
-  downloadFailedAccounts,
-  downloadOriginFile,
   SyncConcurrency,
-  UploadFile,
-  DeleteFile
+  UploadFile
 } from '@/api/sieve'
-import { getAvailableConcurrency } from '@/api/user'
-import { ref, reactive, onMounted, onUnmounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { CircleCloseFilled } from '@element-plus/icons-vue'
+import {getAvailableConcurrency} from '@/api/user'
+import {onMounted, onUnmounted, reactive, ref} from 'vue'
+import {ElMessage, ElMessageBox} from 'element-plus'
+import {CircleCloseFilled} from '@element-plus/icons-vue'
 import WarningBar from '@/components/warningBar/warningBar.vue'
 import dayjs from 'dayjs'
-import { useUserStore } from '@/pinia/modules/user'
+import {useUserStore} from '@/pinia/modules/user'
 
 const userStore = useUserStore()
 const loadingProgress = ref(0)
@@ -581,8 +583,7 @@ const isRefreshing = ref(false)
 const uploadPercentage = ref(0)
 
 const generateRandomTaskName = () => {
-  const randomName = '任务-' + Math.floor(Math.random() * 1000)
-  form.taskName = randomName
+  form.taskName = '任务-' + Math.floor(Math.random() * 1000)
 }
 
 // 显示 一分钟5秒(65s) 一小时5分钟(3605s) 一天5小时(86405s
@@ -636,7 +637,6 @@ const getTableData = async(sortProp, sortOrder) => {
 
   const table = await getSieveTaskList(params)
   if (table.code === 0) {
-    // tableData.value = []
     setTimeout(() => {
       tableData.value = table.data.list
     }, 100)
@@ -684,7 +684,7 @@ const deleteTask = (row) => {
         if (tableData.value.length === 1 && page.value > 1) {
           page.value--
         }
-        getTableData()
+        await getTableData()
       }
     })
     .catch(() => {
@@ -847,12 +847,6 @@ const submitForm = async() => {
       setTimeout(() => {
         isShowProgress.value = false
         closeDialog()
-        // ElMessage.warning('添加可能已经成功，但响应较慢，请稍后确认。')
-
-        // 提示用户手动刷新或联系客服
-        // setTimeout(() => {
-        //   ElMessage.info('如果未在表格数据中出现刚提交的任务，请手动刷新或联系客服。')
-        // }, 2000)
       }, 500)
     }
   } catch (error) {
@@ -1331,7 +1325,7 @@ onMounted(() => {
         getTableData()
       }
     }
-  }, 3000)
+  }, 10000)
 
   onUnmounted(() => {
     clearInterval(intervalId)

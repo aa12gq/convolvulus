@@ -1,14 +1,8 @@
 <template>
   <el-container class="layout-cont">
-    <el-container
-      :class="[isSider ? 'openside' : 'hideside', isMobile ? 'mobile' : '']"
-    >
+    <el-container :class="[isSider ? 'openside' : 'hideside', isMobile ? 'mobile' : '']">
       <el-row
-        :class="[
-          isShadowBg && isMobile
-            ? 'bg-black opacity-50 w-full h-full absolute top-0 left-0 z-10'
-            : '',
-        ]"
+        :class="[isShadowBg && isMobile ? 'bg-black opacity-50 w-full h-full absolute top-0 left-0 z-10' : '']"
         @click="changeShadow()"
       />
       <el-aside
@@ -21,7 +15,7 @@
         >
           <div
             v-if="isSider"
-            class="inline-flex font-mono font-bold text-3xl "
+            class="inline-flex font-mono font-bold text-3xl"
             :style="{ color: textColor }"
           >
             {{ $GIN_VUE_ADMIN.appName }}
@@ -102,36 +96,16 @@
                           class="max-h-fit mr-6"
                         >
                           到期时间:
-                          {{
-                            remainingTime.expired
-                              ? '已过期' + remainingTime.days + '天'
-                              : remainingTime.days >= 1
-                                ? remainingTime.days + '天'
-                                : remainingTime.hours + '小时' + remainingTime.minutes + '分' + remainingTime.seconds + '秒'
-                          }}
+                          {{ remainingTime.expired ? '已过期' + remainingTime.days + '天' : remainingTime.days >= 1 ? remainingTime.days + '天' : remainingTime.hours + '小时' + remainingTime.minutes + '分' + remainingTime.seconds + '秒' }}
                         </el-button>
-                        <!-- <el-switch
-                          v-model="theme"
-                          class="mx-5"
-                          inline-prompt
-                          active-text="侧边黑"
-                          inactive-text="侧边白"
-                          @change="changeMode"
-                        /> -->
                         <el-dropdown>
-                          <div
-                            class="flex justify-center items-center h-full w-full"
-                          >
-                            <span
-                              class="cursor-pointer flex justify-center items-center"
-                            >
+                          <div class="flex justify-center items-center h-full w-full">
+                            <span class="cursor-pointer flex justify-center items-center">
                               <CustomPic />
                               <span
                                 v-show="!isMobile"
                                 class="ml-2"
-                              >{{
-                                userStore.userInfo.nickName
-                              }}</span>
+                              >{{ userStore.userInfo.nickName }}</span>
                               <el-icon>
                                 <arrow-down />
                               </el-icon>
@@ -141,11 +115,7 @@
                             <el-dropdown-menu>
                               <template v-if="userStore.userInfo.authorities">
                                 <el-dropdown-item
-                                  v-for="item in userStore.userInfo.authorities.filter(
-                                    (i) =>
-                                      i.authorityId !==
-                                      userStore.userInfo.authorityId
-                                  )"
+                                  v-for="item in userStore.userInfo.authorities.filter(i => i.authorityId !== userStore.userInfo.authorityId)"
                                   :key="item.authorityId"
                                   @click="changeUserAuth(item.authorityId)"
                                 >
@@ -181,7 +151,6 @@
             class="custom-loading-svg"
             element-loading-background="rgba(0, 0, 0, 0)"
           >
-
             <transition
               mode="out-in"
               name="fade-in"
