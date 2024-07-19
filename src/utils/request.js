@@ -91,18 +91,18 @@ service.interceptors.response.use(
       closeLoading()
     }
 
-    if (!error.response) {
-      ElMessageBox.confirm(`
-        <p>检测到请求错误</p>
-        <p>${error}</p>
-        `, '请求报错', {
-        dangerouslyUseHTMLString: true,
-        distinguishCancelAndClose: true,
-        confirmButtonText: '稍后重试',
-        cancelButtonText: '取消'
-      })
-      return
-    }
+    // if (!error.response) {
+    //   ElMessageBox.confirm(`
+    //     <p>检测到请求错误</p>
+    //     <p>${error}</p>
+    //     `, '请求报错', {
+    //     dangerouslyUseHTMLString: true,
+    //     distinguishCancelAndClose: true,
+    //     confirmButtonText: '稍后重试',
+    //     cancelButtonText: '取消'
+    //   })
+    //   return
+    // }
 
     // switch (error.response.status) {
     //   case 500:

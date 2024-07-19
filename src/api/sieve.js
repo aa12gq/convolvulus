@@ -119,13 +119,14 @@ export const downloadOriginFile = (taskId) => {
   })
 }
 
-// 修改后的UploadFile函数，接受配置参数
-export const UploadFile = (data, config) => {
+export const UploadFile = (data) => {
   return service({
     url: `/sieveTask/uploadFile`,
     method: 'post',
     data,
-    ...config // 传递配置参数
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
   })
 }
 

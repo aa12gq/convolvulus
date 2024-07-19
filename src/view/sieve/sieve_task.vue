@@ -56,26 +56,26 @@
         </div>
 
         <el-Button
-          class="bg-[#CFAB86] text-gray-100"
+          class="bg-orange-400 text-gray-100"
           :disabled="multipleSelection.length == 0"
           @click="batchPause()"
         >
-          批量暂停
+          一键中止
         </el-Button>
+<!--        <el-Button-->
+<!--          class="bg-[#CFAB86] text-gray-100"-->
+<!--          :disabled="multipleSelection.length == 0"-->
+<!--          @click="batchRecover()"-->
+<!--        >-->
+<!--          一键恢复-->
+<!--        </el-Button>-->
         <el-Button
-          class="bg-[#CFAB86] text-gray-100"
-          :disabled="multipleSelection.length == 0"
-          @click="batchRecover()"
-        >
-          批量恢复
-        </el-Button>
-        <el-Button
-          class="bg-[#CFAB86] text-gray-100"
+          class="bg-red-400 text-gray-100"
           danger
           :disabled="multipleSelection.length == 0"
           @click="batchDelete()"
         >
-          批量删除
+          一键删除
         </el-Button>
         <el-Button
           class="bg-[#4773C5] text-gray-100 hover:bg-[#729cea] active:bg-[#729cea] active:transform active:!scale-90 active:!shadow-lg"
@@ -341,10 +341,10 @@
                 >更多操作</el-button>
                 <template #dropdown>
                   <el-dropdown-menu>
-                    <el-dropdown-item
-                      v-if="scope.row.status === 'Pause' && scope.row.totalNumber <= 200000"
-                      @click.native="openRecover(scope.row)"
-                    >恢复</el-dropdown-item>
+<!--                    <el-dropdown-item-->
+<!--                      v-if="scope.row.status === 'Pause' && scope.row.totalNumber <= 200000"-->
+<!--                      @click.native="openRecover(scope.row)"-->
+<!--                    >恢复</el-dropdown-item>-->
                     <el-dropdown-item
                       v-if="scope.row.status === 'Running'"
                       @click.native="openPause(scope.row)"
@@ -446,27 +446,6 @@
             @click="generateRandomTaskName"
           >生成任务名称</el-button>
         </div>
-
-        <!-- 添加按钮来触发生成随机任务名称的方法 -->
-
-        <!-- <el-form-item
-          label="国家区号"
-          prop="country_id"
-        >
-          <el-select
-            v-model="form.country_id"
-            filterable
-            placeholder="请选择国家区号"
-            style="width: 100%"
-          >
-            <el-option
-              v-for="item in countryInfoList"
-              :key="item.ID"
-              :label="`${item.code} ${item.name} ${item.dialingCode}`"
-              :value="item.ID"
-            />
-          </el-select>
-        </el-form-item> -->
         <el-form-item
           label="线程数"
           prop="concurrency"
@@ -492,35 +471,39 @@
           ><Refresh /></el-icon>
         </el-form-item>
 
-        <el-form-item
-          label="上传文件"
-          prop="file"
-        >
+
+        <el-form-item prop="file" class="relative">
+          <template #label>
+            <div class="flex items-center">
+              <el-tooltip
+                  effect="dark"
+                  content="为了最佳优化，请将手机号以.txt格式上传，并确保每行只包含一个手机号"
+                  placement="top"
+              >
+                <el-icon style="margin-right: 4px" :size="12">
+                  <Warning />
+                </el-icon>
+              </el-tooltip>
+              <span>上传文件</span>
+            </div>
+          </template>
           <el-upload
-            ref="uploadRef"
-            class="upload-demo w-full"
-            :file-list="fileList"
-            :on-change="handleUploadChange"
-            :auto-upload="false"
-            drag
+              ref="uploadRef"
+              class="upload-demo w-full"
+              :file-list="fileList"
+              :on-change="handleUploadChange"
+              :auto-upload="false"
+              drag
           >
             <template #trigger>
               <el-button class="bg-gray-100 rounded-none hover:text-">选择文件</el-button>
             </template>
-            <el-tooltip
-              effect="dark"
-              content="为了最佳优化，请将手机号以.txt格式上传，并确保每行只包含一个手机号"
-              placement="top"
-            >
-              <el-icon
-                style="margin-left: 4px"
-                :size="12"
-              ><Warning /></el-icon>
-            </el-tooltip>
+
           </el-upload>
           <el-progress
-            v-if="uploadPercentage > 0"
-            :percentage="uploadPercentage"
+              v-if="uploadPercentage > 0"
+              :percentage="uploadPercentage"
+              :color="customColors"
           />
         </el-form-item>
 
@@ -581,6 +564,14 @@ const searchText = ref('')
 const currentSearchText = ref('')
 const isRefreshing = ref(false)
 const uploadPercentage = ref(0)
+const customColors = [
+  { color: '#f56c6c', percentage: 20 },
+  { color: '#e6a23c', percentage: 40 },
+  { color: '#5cb87a', percentage: 60 },
+  { color: '#1989fa', percentage: 80 },
+  { color: '#6f7ad3', percentage: 100 },
+]
+
 
 const generateRandomTaskName = () => {
   form.taskName = '任务-' + Math.floor(Math.random() * 1000)
@@ -736,17 +727,17 @@ const fileList = ref([])
 const handleUploadChange = (file, fileListUpdated) => {
   fileList.value = fileListUpdated
   if (fileListUpdated.length > 0) {
-    file.value = fileListUpdated[0].raw
-    form.fileName = fileListUpdated[0].raw.name
-    if (file.value) {
-      uploadFile(file.value)
+    const selectedFile = fileListUpdated[0].raw
+    if (selectedFile) {
+      uploadFile(selectedFile)
     } else {
-      console.error('No file to upload')
+      console.error('没有要上传的文件')
     }
   } else {
-    file.value = null
+    console.log('没有选择文件')
   }
 }
+
 
 const form = reactive({
   taskName: '',
@@ -871,45 +862,50 @@ const submitForm = async() => {
   }
 }
 
-const uploadFile = async(file) => {
-  // 弹出提示，告诉用户正在上传
-  ElMessage.info('正在为您将文件上传至云端')
+const uploadFile = async (file) => {
+  const chunkSize = 10 * 1024 * 1024 // 每个块的大小，10MB
+  const totalParts = Math.ceil(file.size / chunkSize)
+  const fileName = file.name
+  let uploadSuccess = true // 用于记录是否所有块都上传成功
 
-  // 构建 formData
-  const formData = new FormData()
-  formData.append('file', file)
+  for (let partNumber = 1; partNumber <= totalParts; partNumber++) {
+    const start = (partNumber - 1) * chunkSize
+    const end = Math.min(file.size, start + chunkSize)
+    const blob = file.slice(start, end)
 
-  // 确保 form 对象已初始化
-  if (!form.value) {
-    form.value = {}
+    const formData = new FormData()
+    formData.append('file', blob)
+    formData.append('fileName', fileName)
+    formData.append('partNumber', partNumber.toString())
+    formData.append('totalParts', totalParts.toString())
+    console.log('formData file:', formData.get('file'))
+    console.log('formData fileName:', formData.get('fileName'))
+    console.log('formData partNumber:', formData.get('partNumber'))
+    console.log('formData totalParts:', formData.get('totalParts'))
+
+    try {
+      const response = await UploadFile(formData)
+      if (response && response.data) {
+        if (partNumber === totalParts) {
+          form.filePath = response.data.filePath
+        }
+      } else {
+        uploadSuccess = false
+      }
+    } catch (error) {
+      uploadSuccess = false
+      ElMessage.error(`上传过程中出现错误: ${error}`)
+    }
+
+    // 更新上传进度
+    uploadPercentage.value = Math.round((partNumber / totalParts) * 100)
   }
 
-  try {
-    const response = await UploadFile(formData, {
-      onUploadProgress: progressEvent => {
-        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
-        uploadPercentage.value = percentCompleted // 更新进度条
-        console.log('上传进度:', percentCompleted) // 添加进度日志
-      }
-    })
-
-    console.log('服务器响应:', response) // 打印服务器响应
-
-    if (response && response.code === 0) {
-      ElMessage.success('文件已上传至云端')
-      // 将上传成功后的文件信息填充到表单中
-      form.fileName = response.data.fileName
-      form.filePath = response.data.filePath
-      console.log('form', form.value)
-    } else {
-      ElMessage.error('上传失败')
-      console.error('上传失败:', response) // 打印失败原因
-    }
-  } catch (error) {
-    ElMessage.error('上传过程中出现错误')
-    console.error('上传错误:', error) // 打印更详细的错误信息
-  } finally {
-    uploadPercentage.value = 0 // 上传完成后重置进度条
+  // 所有块上传完成后，统一提示
+  if (uploadSuccess) {
+    ElMessage.success('文件上传完成')
+  } else {
+    ElMessage.error('部分块上传失败，请重试')
   }
 }
 
@@ -1216,7 +1212,7 @@ const handleSelectionChange = (val) => {
 
 const batchDelete = () => {
   // 显示确认对话框
-  ElMessageBox.confirm('确认要删除选中的行数据吗？', '批量删除', {
+  ElMessageBox.confirm('确认要删除选中的行数据吗？', '一键删除', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning',
@@ -1240,13 +1236,13 @@ const batchDelete = () => {
     })
     .catch(() => {
       // 用户点击了取消按钮
-      ElMessage.warning('已取消批量删除')
+      ElMessage.warning('已取消一键删除')
     })
 }
 
 const batchPause = () => {
   // 显示确认对话框
-  ElMessageBox.confirm('确认要暂停选中的行数据吗？', '批量暂停', {
+  ElMessageBox.confirm('确认要暂停选中的行数据吗？', '一键暂停', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning',
@@ -1270,13 +1266,13 @@ const batchPause = () => {
     })
     .catch(() => {
       // 用户点击了取消按钮
-      ElMessage.warning('已取消批量暂停')
+      ElMessage.warning('已取消一键暂停')
     })
 }
 
 const batchRecover = () => {
   // 显示确认对话框
-  ElMessageBox.confirm('确认要暂停选中的行数据吗？', '批量恢复', {
+  ElMessageBox.confirm('确认要暂停选中的行数据吗？', '一键恢复', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning',
@@ -1300,7 +1296,7 @@ const batchRecover = () => {
     })
     .catch(() => {
       // 用户点击了取消按钮
-      ElMessage.warning('已取消批量恢复')
+      ElMessage.warning('已取消一键恢复')
     })
 }
 onMounted(() => {
