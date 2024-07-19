@@ -3,9 +3,6 @@
     <warning-bar
       title="为确保系统顺畅运行，我们采用了先进的性能优化技术，系统将定期自动清理当天的账号检测信息以保障高效稳定的服务。请您及时下载并妥善保存信息 感谢您的理解与支持"
     />
-    <warning-bar
-      title="单次任务文件下号码大于20w暂不支持恢复"
-    />
     <div class="gva-table-box">
       <div class="gva-btn-list">
         <!-- 按钮区域 -->
@@ -472,40 +469,42 @@
         </el-form-item>
 
 
-        <el-form-item prop="file" class="relative">
-          <template #label>
-            <div class="flex items-center">
-              <el-tooltip
-                  effect="dark"
-                  content="为了最佳优化，请将手机号以.txt格式上传，并确保每行只包含一个手机号"
-                  placement="top"
-              >
-                <el-icon style="margin-right: 4px" :size="12">
-                  <Warning />
-                </el-icon>
-              </el-tooltip>
-              <span>上传文件</span>
-            </div>
-          </template>
-          <el-upload
-              ref="uploadRef"
-              class="upload-demo w-full"
-              :file-list="fileList"
-              :on-change="handleUploadChange"
-              :auto-upload="false"
-              drag
-          >
-            <template #trigger>
-              <el-button class="bg-gray-100 rounded-none hover:text-">选择文件</el-button>
-            </template>
+<!--        <el-form-item prop="file" class="relative">-->
+<!--          <template #label>-->
+<!--            <div class="flex items-center">-->
+<!--              <el-tooltip-->
+<!--                  effect="dark"-->
+<!--                  content="为了最佳优化，请将手机号以.txt格式上传，并确保每行只包含一个手机号"-->
+<!--                  placement="top"-->
+<!--              >-->
+<!--                <el-icon style="margin-right: 4px" :size="12">-->
+<!--                  <Warning />-->
+<!--                </el-icon>-->
+<!--              </el-tooltip>-->
+<!--              <span>上传文件</span>-->
+<!--            </div>-->
+<!--          </template>-->
+<!--          <el-upload-->
+<!--              ref="uploadRef"-->
+<!--              class="upload-demo w-full"-->
+<!--              :file-list="fileList"-->
+<!--              :on-change="handleUploadChange"-->
+<!--              :auto-upload="false"-->
+<!--              drag-->
+<!--          >-->
+<!--            <template #trigger>-->
+<!--              <el-button class="bg-gray-100 rounded-none hover:text-">选择文件</el-button>-->
+<!--            </template>-->
 
-          </el-upload>
-          <el-progress
-              v-if="uploadPercentage > 0"
-              :percentage="uploadPercentage"
-              :color="customColors"
-          />
-        </el-form-item>
+<!--          </el-upload>-->
+<!--          <el-progress-->
+<!--              v-if="uploadPercentage > 0"-->
+<!--              :percentage="uploadPercentage"-->
+<!--              :color="customColors"-->
+<!--          />-->
+<!--        </el-form-item>-->
+
+        <breakpoint-vue @uploadComplete="handleUploadComplete" @clearFile="handleClearFile"/>
 
         <el-form-item>
           <el-button
@@ -513,7 +512,7 @@
             type="primary"
             class="w-[7rem] cursor-pointer text-gray-100 button-click-effect"
             @click="submitForm"
-          >添加</el-button>
+          >提交任务</el-button>
           <el-button
             color="#DEDCD2"
             class="w-[7rem] rounded ml-2 button-click-effect"
@@ -527,6 +526,7 @@
       />
     </el-dialog>
   </div>
+
 </template>
 
 <script setup>
@@ -552,6 +552,7 @@ import {CircleCloseFilled} from '@element-plus/icons-vue'
 import WarningBar from '@/components/warningBar/warningBar.vue'
 import dayjs from 'dayjs'
 import {useUserStore} from '@/pinia/modules/user'
+import breakpointVue from '@/view/example/breakpoint/breakpoint.vue'
 
 const userStore = useUserStore()
 const loadingProgress = ref(0)
@@ -564,15 +565,6 @@ const searchText = ref('')
 const currentSearchText = ref('')
 const isRefreshing = ref(false)
 const uploadPercentage = ref(0)
-const customColors = [
-  { color: '#f56c6c', percentage: 20 },
-  { color: '#e6a23c', percentage: 40 },
-  { color: '#5cb87a', percentage: 60 },
-  { color: '#1989fa', percentage: 80 },
-  { color: '#6f7ad3', percentage: 100 },
-]
-
-
 const generateRandomTaskName = () => {
   form.taskName = '任务-' + Math.floor(Math.random() * 1000)
 }
@@ -1327,6 +1319,21 @@ onMounted(() => {
     clearInterval(intervalId)
   })
 })
+
+const handleUploadComplete = (obj) => {
+  form.filePath = obj.path;
+  form.fileName = obj.name;
+  if(obj.path ==='' && obj.name !=="") {
+    form.filePath = "file/" + obj.name;
+  }
+}
+
+const handleClearFile = (filePath) => {
+  if(filePath !== "") {
+    // 删除文件
+    deleteFile(filePath)
+  }
+}
 </script>
 
 <style lang="scss">

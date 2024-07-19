@@ -1,60 +1,56 @@
 <template>
   <div class="break-point">
     <div class="gva-table-box">
-      <el-divider content-position="left">大文件上传</el-divider>
-      <form
-        id="fromCont"
-        method="post"
-      >
-        <div
-          class="fileUpload"
-          @click="inputChange"
+      <el-divider>文件上传</el-divider>
+      <div class="center-content">
+        <form id="fromCont" method="post">
+          <div class="fileUpload" @click="inputChange">
+            选择文件
+            <input
+                v-show="false"
+                id="file"
+                ref="FileInput"
+                multiple="multiple"
+                type="file"
+                @change="choseFile"
+            />
+          </div>
+        </form>
+        <el-button
+            :disabled="limitFileSize"
+            type="primary"
+            class="uploadBtn h-8 -mt-1 !rounded-none"
+            @click="getFile"
         >
-          选择文件
-          <input
-            v-show="false"
-            id="file"
-            ref="FileInput"
-            multiple="multiple"
-            type="file"
-            @change="choseFile"
-          >
-        </div>
-      </form>
-      <el-button
-        :disabled="limitFileSize"
-        type="primary"
-        class="uploadBtn"
-        @click="getFile"
-      >上传文件</el-button>
-      <div class="el-upload__tip">请上传不超过5MB的文件</div>
+          点击上传
+        </el-button>
+        <el-button
+            type="danger"
+            class="uploadBtn h-8 -mt-1 !rounded-none"
+            @click="clearFile"
+        >
+          清除文件
+        </el-button>
+      </div>
       <div class="list">
-        <transition
-          name="list"
-          tag="p"
-        >
-          <div
-            v-if="file"
-            class="list-item"
-          >
+        <transition name="list" tag="p">
+          <div v-if="file" class="list-item">
             <el-icon>
               <document />
             </el-icon>
             <span>{{ file.name }}</span>
             <span class="percentage">{{ percentage }}%</span>
             <el-progress
-              :show-text="false"
-              :text-inside="false"
-              :stroke-width="2"
-              :percentage="percentage"
+                :show-text="false"
+                :text-inside="false"
+                :stroke-width="2"
+                :percentage="percentage"
             />
           </div>
         </transition>
       </div>
-      <div class="tips">此版本为先行体验功能测试版，样式美化和性能优化正在进行中，上传切片文件和合成的完整文件分别再QMPlusserver目录的breakpointDir文件夹和fileDir文件夹</div>
     </div>
   </div>
-
 </template>
 
 <script setup>
@@ -72,6 +68,8 @@ defineOptions({
   name: 'BreakPoint'
 })
 
+const emit = defineEmits(['uploadComplete', 'clearFile'])
+
 const file = ref(null)
 const fileMd5 = ref('')
 const formDataList = ref([])
@@ -80,12 +78,13 @@ const waitNum = ref(NaN)
 const limitFileSize = ref(false)
 const percentage = ref(0)
 const percentageFlage = ref(true)
+const filePath = ref('')
 
 // 选中文件的函数
-const choseFile = async(e) => {
+const choseFile = async (e) => {
   const fileR = new FileReader() // 创建一个reader用来读取文件流
   const fileInput = e.target.files[0] // 获取当前文件
-  const maxSize = 5 * 1024 * 1024
+  const maxSize = 1 * 1024 * 1024 * 1024 // 设置最大文件大小为1GB
   file.value = fileInput // file 丢全局方便后面用 可以改进为func传参形式
   percentage.value = 0
   if (file.value.size < maxSize) {
@@ -127,7 +126,7 @@ const choseFile = async(e) => {
         // 当是断点续传时候
         waitUpLoad.value = formDataList.value.filter(all => {
           return !(
-            finishList &&
+              finishList &&
               finishList.some(fi => fi.FileChunkNumber === all.key)
           ) // 找出需要上传的切片
         })
@@ -136,16 +135,22 @@ const choseFile = async(e) => {
         ElMessage.success('文件已秒传')
       }
       waitNum.value = waitUpLoad.value.length // 记录长度用于百分比展示
+      let filePath = res.data.file.FilePath
+      if (filePath.startsWith('./')) {
+        filePath = filePath.substring(2)
+      }
+      emit('uploadComplete', { path: filePath, name: res.data.file.FileName }) // 传递文件路径给父组件
+      filePath.value = res.data.file.FilePath
       console.log(waitNum.value)
     }
   } else {
     limitFileSize.value = true
-    ElMessage('请上传小于5M文件')
+    ElMessage('请上传小于1G文件')
   }
 }
 
+// 确定按钮
 const getFile = () => {
-  // 确定按钮
   if (file.value === null) {
     ElMessage('请先上传文件')
     return
@@ -156,26 +161,32 @@ const getFile = () => {
   sliceFile() // 上传切片
 }
 
+// 上传切片
 const sliceFile = () => {
   waitUpLoad.value &&
-        waitUpLoad.value.forEach(item => {
-          // 需要上传的切片
-          item.formData.append('chunkTotal', formDataList.value.length) // 切片总数携带给后台 总有用的
-          const fileR = new FileReader() // 功能同上
-          const fileF = item.formData.get('file')
-          fileR.readAsArrayBuffer(fileF)
-          fileR.onload = e => {
-            const spark = new SparkMD5.ArrayBuffer()
-            spark.append(e.target.result)
-            item.formData.append('chunkMd5', spark.end()) // 获取当前切片md5 后端用于验证切片完整性
-            upLoadFileSlice(item)
-          }
-        })
+  waitUpLoad.value.forEach(item => {
+    // 需要上传的切片
+    item.formData.append('chunkTotal', formDataList.value.length) // 切片总数携带给后台 总有用的
+    const fileR = new FileReader() // 功能同上
+    const fileF = item.formData.get('file')
+    fileR.readAsArrayBuffer(fileF)
+    fileR.onload = e => {
+      const spark = new SparkMD5.ArrayBuffer()
+      spark.append(e.target.result)
+      item.formData.append('chunkMd5', spark.end()) // 获取当前切片md5 后端用于验证切片完整性
+      upLoadFileSlice(item)
+    }
+  })
 }
 
-watch(() => waitNum.value, () => { percentage.value = Math.floor(((formDataList.value.length - waitNum.value) / formDataList.value.length) * 100) })
+// 监听切片上传的进度
+watch(() => waitNum.value, () => {
+  // 这里计算进度时，只计算成功上传的切片
+  percentage.value = Math.floor(((formDataList.value.length - waitNum.value) / formDataList.value.length) * 100)
+})
 
-const upLoadFileSlice = async(item) => {
+// 切片上传函数
+const upLoadFileSlice = async (item) => {
   // 切片上传
   const fileRe = await breakpointContinue(item.formData)
   if (fileRe.code !== 0) {
@@ -197,6 +208,13 @@ const upLoadFileSlice = async(item) => {
         filePath: res.data.filePath,
       }
       ElMessage.success('上传成功')
+      console.log(res)
+      let filePath = res.data.file.FilePath
+      if (filePath.startsWith('./')) {
+        filePath = filePath.substring(2)
+      }
+      emit('uploadComplete', {path: filePath, name: res.data.file.FileName}); // 触发事件，传递文件路径
+      filePath.value = res.data.filePath
       await removeChunk(params)
     }
   }
@@ -205,6 +223,18 @@ const upLoadFileSlice = async(item) => {
 const FileInput = ref(null)
 const inputChange = () => {
   FileInput.value.dispatchEvent(new MouseEvent('click'))
+}
+
+const clearFile = () => {
+  file.value = null
+  FileInput.value.value = null
+  percentage.value = 0
+  formDataList.value = []
+  waitUpLoad.value = []
+  waitNum.value = NaN
+  limitFileSize.value = false
+  emit('clearFile', filePath.value)
+  filePath.value = ""
 }
 </script>
 
@@ -223,69 +253,71 @@ li {
 a {
   color: #42b983;
 }
-#fromCont{
+.center-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+#fromCont {
   display: inline-block;
+  margin-right: 10px;
 }
-.fileUpload{
-    padding: 3px 10px;
-    font-size: 12px;
-    height: 20px;
-    line-height: 20px;
-    position: relative;
+.fileUpload {
+  padding: 3px 10px;
+  font-size: 12px;
+  height: 20px;
+  line-height: 20px;
+  position: relative;
+  cursor: pointer;
+  color: #000;
+  border: 1px solid #c1c1c1;
+  border-radius: 4px;
+  overflow: hidden;
+  display: inline-block;
+  input {
+    position: absolute;
+    font-size: 100px;
+    right: 0;
+    top: 0;
+    opacity: 0;
     cursor: pointer;
-    color: #000;
-    border: 1px solid #c1c1c1;
-    border-radius: 4px;
-    overflow: hidden;
-    display: inline-block;
-    input{
-      position: absolute;
-      font-size: 100px;
-      right: 0;
-      top: 0;
-      opacity: 0;
-      cursor: pointer;
-    }
+  }
 }
- .fileName{
-    display: inline-block;
-    vertical-align: top;
-    margin: 6px 15px 0 15px;
-  }
-  .uploadBtn{
-    position: relative;
-    top: -10px;
-    margin-left: 15px;
-  }
-  .tips{
-    margin-top: 30px;
-    font-size: 14px;
-    font-weight: 400;
-    color: #606266;
-  }
-  .el-divider{
-    margin: 0 0 30px 0;
-  }
-
- .list{
-   margin-top:15px;
- }
- .list-item {
+.fileName {
+  display: inline-block;
+  vertical-align: top;
+  margin: 6px 15px 0 15px;
+}
+.uploadBtn {
+  position: relative;
+}
+.tips {
+  margin-top: 30px;
+  font-size: 14px;
+  font-weight: 400;
+  color: #606266;
+}
+.el-divider {
+  margin: 0 0 30px 0;
+}
+.list {
+  margin-top: 15px;
+}
+.list-item {
   display: block;
   margin-right: 10px;
   color: #606266;
   line-height: 25px;
   margin-bottom: 5px;
-  width: 40%;
-   .percentage{
-          float: right;
-        }
+  width: 100%;
+  .percentage {
+    float: right;
+  }
 }
 .list-enter-active, .list-leave-active {
   transition: all 1s;
 }
-.list-enter, .list-leave-to
-/* .list-leave-active for below version 2.1.8 */ {
+.list-enter, .list-leave-to {
   opacity: 0;
   transform: translateY(-30px);
 }
