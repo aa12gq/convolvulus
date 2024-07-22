@@ -47,6 +47,7 @@
               () => {
                 openDialog('add');
                 RefreshAvailableConcurrency();
+                uploadPercentage = 0
               }
             "
           >添加任务</el-button>
@@ -410,7 +411,7 @@
             @click="()=>{
               close()
               if(form.filePath != ''){
-                deleteFile(form.filePath)
+                // deleteFile(form.filePath)
               }
             }"
           >
@@ -469,42 +470,42 @@
         </el-form-item>
 
 
-<!--        <el-form-item prop="file" class="relative">-->
-<!--          <template #label>-->
-<!--            <div class="flex items-center">-->
-<!--              <el-tooltip-->
-<!--                  effect="dark"-->
-<!--                  content="为了最佳优化，请将手机号以.txt格式上传，并确保每行只包含一个手机号"-->
-<!--                  placement="top"-->
-<!--              >-->
-<!--                <el-icon style="margin-right: 4px" :size="12">-->
-<!--                  <Warning />-->
-<!--                </el-icon>-->
-<!--              </el-tooltip>-->
-<!--              <span>上传文件</span>-->
-<!--            </div>-->
-<!--          </template>-->
-<!--          <el-upload-->
-<!--              ref="uploadRef"-->
-<!--              class="upload-demo w-full"-->
-<!--              :file-list="fileList"-->
-<!--              :on-change="handleUploadChange"-->
-<!--              :auto-upload="false"-->
-<!--              drag-->
-<!--          >-->
-<!--            <template #trigger>-->
-<!--              <el-button class="bg-gray-100 rounded-none hover:text-">选择文件</el-button>-->
-<!--            </template>-->
+        <el-form-item prop="file" class="relative">
+          <template #label>
+            <div class="flex items-center">
+              <el-tooltip
+                  effect="dark"
+                  content="为了最佳优化，请将手机号以.txt格式上传，并确保每行只包含一个手机号"
+                  placement="top"
+              >
+                <el-icon style="margin-right: 4px" :size="12">
+                  <Warning />
+                </el-icon>
+              </el-tooltip>
+              <span>上传文件</span>
+            </div>
+          </template>
+          <el-upload
+              ref="uploadRef"
+              class="upload-demo w-full"
+              :file-list="fileList"
+              :on-change="handleUploadChange"
+              :auto-upload="false"
+              drag
+          >
+            <template #trigger>
+              <el-button class="bg-gray-100 rounded-none hover:text-">选择文件</el-button>
+            </template>
 
-<!--          </el-upload>-->
-<!--          <el-progress-->
-<!--              v-if="uploadPercentage > 0"-->
-<!--              :percentage="uploadPercentage"-->
-<!--              :color="customColors"-->
-<!--          />-->
-<!--        </el-form-item>-->
+          </el-upload>
+          <el-progress
+              v-if="uploadPercentage > 0"
+              :percentage="uploadPercentage"
+              :color="customColors"
+          />
+        </el-form-item>
 
-        <breakpoint-vue @uploadComplete="handleUploadComplete" @clearFile="handleClearFile"/>
+<!--        <breakpoint-vue @uploadComplete="handleUploadComplete" @clearFile="handleClearFile"/>-->
 
         <el-form-item>
           <el-button
@@ -855,61 +856,79 @@ const submitForm = async() => {
 }
 
 const uploadFile = async (file) => {
-  const chunkSize = 10 * 1024 * 1024 // 每个块的大小，10MB
-  const totalParts = Math.ceil(file.size / chunkSize)
-  const fileName = file.name
-  let uploadSuccess = true // 用于记录是否所有块都上传成功
+  // 动态计算每块大小，根据文件大小调整
+  const calculateChunkSize = (fileSize) => {
+    if (fileSize <= 10 * 1024 * 1024) { // 文件大小 <= 10MB
+      return 1 * 1024 * 1024; // 每块大小 1MB
+    } else if (fileSize <= 100 * 1024 * 1024) { // 文件大小 <= 100MB
+      return 5 * 1024 * 1024; // 每块大小 5MB
+    } else {
+      return 10 * 1024 * 1024; // 每块大小 10MB
+    }
+  };
+
+  const chunkSize = calculateChunkSize(file.size);
+  console.log("文件已被分块总数", chunkSize)
+  const totalParts = Math.ceil(file.size / chunkSize);
+  const fileName = file.name;
+  let uploadSuccess = true; // 用于记录是否所有块都上传成功
+
+  // 初始化进度数组，每个块的初始进度为0
+  const partProgress = new Array(totalParts).fill(0);
+
+  // 更新总进度
+  const updateTotalProgress = () => {
+    const totalProgress = partProgress.reduce((acc, curr) => acc + curr, 0) / totalParts;
+    console.log(`总进度: ${totalProgress}%`);
+    uploadPercentage.value = Math.round(totalProgress);
+  };
 
   for (let partNumber = 1; partNumber <= totalParts; partNumber++) {
-    const start = (partNumber - 1) * chunkSize
-    const end = Math.min(file.size, start + chunkSize)
-    const blob = file.slice(start, end)
+    const start = (partNumber - 1) * chunkSize;
+    const end = Math.min(file.size, start + chunkSize);
+    const blob = file.slice(start, end);
 
-    const formData = new FormData()
-    formData.append('file', blob)
-    formData.append('fileName', fileName)
-    formData.append('partNumber', partNumber.toString())
-    formData.append('totalParts', totalParts.toString())
-    console.log('formData file:', formData.get('file'))
-    console.log('formData fileName:', formData.get('fileName'))
-    console.log('formData partNumber:', formData.get('partNumber'))
-    console.log('formData totalParts:', formData.get('totalParts'))
+    const formData = new FormData();
+    formData.append('file', blob);
+    formData.append('fileName', fileName);
+    formData.append('partNumber', partNumber.toString());
+    formData.append('totalParts', totalParts.toString());
 
     try {
-      const response = await UploadFile(formData)
+      const response = await UploadFile(formData, {
+        onUploadProgress: (progressEvent) => {
+          // 更新当前块的进度
+          const progress = Math.round((progressEvent.loaded / progressEvent.total) * 100);
+          console.log(`第 ${partNumber} 块进度: ${progress}%`);
+          partProgress[partNumber - 1] = progress;
+          updateTotalProgress();
+        }
+      });
+
       if (response && response.data) {
         if (partNumber === totalParts) {
-          form.filePath = response.data.filePath
+          form.filePath = response.data.filePath;
         }
       } else {
-        uploadSuccess = false
+        uploadSuccess = false;
+        ElMessage.error(`第 ${partNumber} 块上传失败`);
+        break;
       }
     } catch (error) {
-      uploadSuccess = false
-      ElMessage.error(`上传过程中出现错误: ${error}`)
+      uploadSuccess = false;
+      ElMessage.error(`上传过程中出现错误: ${error}`);
+      break;
     }
-
-    // 更新上传进度
-    uploadPercentage.value = Math.round((partNumber / totalParts) * 100)
   }
 
   // 所有块上传完成后，统一提示
   if (uploadSuccess) {
-    ElMessage.success('文件上传完成')
+    ElMessage.success('文件上传完成');
+    form.fileName = fileName
   } else {
-    ElMessage.error('部分块上传失败，请重试')
+    ElMessage.error('部分块上传失败，请重试');
   }
-}
-
-const deleteFile = async(filepath) => {
-  const response = await DeleteFile(filepath)
-  if (response && response.code === 0) {
-    form.fileName = ''
-    form.filePath = ''
-  } else {
-    ElMessage.error('删除失败')
-  }
-}
+};
 
 const resetForm = () => {
   // 如果 formRef 是有效的，重置表单字段
@@ -1331,7 +1350,7 @@ const handleUploadComplete = (obj) => {
 const handleClearFile = (filePath) => {
   if(filePath !== "") {
     // 删除文件
-    deleteFile(filePath)
+    // deleteFile(filePath)
   }
 }
 </script>

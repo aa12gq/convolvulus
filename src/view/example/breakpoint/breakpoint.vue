@@ -56,7 +56,6 @@
 <script setup>
 import SparkMD5 from 'spark-md5'
 import {
-  findFile,
   breakpointContinueFinish,
   removeChunk,
   breakpointContinue
@@ -113,34 +112,10 @@ const choseFile = async (e) => {
         formDataList.value.push({ key: i, formData }) // 把当前切片信息 自己是第几片 存入我们方才准备好的池子
         i++
       }
-      const params = {
-        fileName: file.value.name,
-        fileMd5: fileMd5.value,
-        chunkTotal: formDataList.value.length
-      }
-      const res = await findFile(params)
-      // 全部切完以后 发一个请求给后端 拉当前文件后台存储的切片信息 用于检测有多少上传成功的切片
-      const finishList = res.data.file.ExaFileChunk // 上传成功的切片
-      const IsFinish = res.data.file.IsFinish // 是否是同文件不同命 （文件md5相同 文件名不同 则默认是同一个文件但是不同文件名 此时后台数据库只需要拷贝一下数据库文件即可 不需要上传文件 即秒传功能）
-      if (!IsFinish) {
-        // 当是断点续传时候
-        waitUpLoad.value = formDataList.value.filter(all => {
-          return !(
-              finishList &&
-              finishList.some(fi => fi.FileChunkNumber === all.key)
-          ) // 找出需要上传的切片
-        })
-      } else {
-        waitUpLoad.value = [] // 秒传则没有需要上传的切片
-        ElMessage.success('文件已秒传')
-      }
+      waitUpLoad.value = formDataList.value // 全部切片都需要上传
       waitNum.value = waitUpLoad.value.length // 记录长度用于百分比展示
-      let filePath = res.data.file.FilePath
-      if (filePath.startsWith('./')) {
-        filePath = filePath.substring(2)
-      }
-      emit('uploadComplete', { path: filePath, name: res.data.file.FileName }) // 传递文件路径给父组件
-      filePath.value = res.data.file.FilePath
+      emit('uploadComplete', { path: '', name: file.value.name }) // 传递文件名称给父组件
+      filePath.value = ''
       console.log(waitNum.value)
     }
   } else {
@@ -209,11 +184,11 @@ const upLoadFileSlice = async (item) => {
       }
       ElMessage.success('上传成功')
       console.log(res)
-      let filePath = res.data.file.FilePath
-      if (filePath.startsWith('./')) {
-        filePath = filePath.substring(2)
+      let internalfilePath = res.data.file.FilePath
+      if (internalfilePath.startsWith('./')) {
+        internalfilePath = internalfilePath.substring(2)
       }
-      emit('uploadComplete', {path: filePath, name: res.data.file.FileName}); // 触发事件，传递文件路径
+      emit('uploadComplete', {path: internalfilePath, name: res.data.file.FileName}); // 触发事件，传递文件路径
       filePath.value = res.data.filePath
       await removeChunk(params)
     }

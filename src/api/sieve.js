@@ -119,11 +119,12 @@ export const downloadOriginFile = (taskId) => {
   })
 }
 
-export const UploadFile = (data) => {
+export const UploadFile = (data, config) => {
   return service({
     url: `/sieveTask/uploadFile`,
     method: 'post',
     data,
+    ...config,
     headers: {
       'Content-Type': 'multipart/form-data'
     }
