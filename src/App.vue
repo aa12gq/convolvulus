@@ -34,7 +34,7 @@ defineOptions({
 .el-tag{
   color: white !important;
   border: none !important;
-  border-radius: 10px !important;
+  border-radius: 2px !important;
   overflow: hidden !important;
 }
 

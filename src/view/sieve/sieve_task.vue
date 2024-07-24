@@ -1,7 +1,12 @@
 <template>
   <div class="box">
-    <warning-bar
+    <info-bar
       title="为确保系统顺畅运行，我们采用了先进的性能优化技术，系统将定期自动清理当天的账号检测信息以保障高效稳定的服务。请您及时下载并妥善保存信息 感谢您的理解与支持"
+      class="opacity-80"
+    />
+    <info-bar
+      title="若筛选大量数据，请将筛选出的正常数据再筛选一次，以确保准确性（由于大量筛选时可能存在数据缓存，导致第一次筛选结果不够准确）"
+      class="opacity-80"
     />
     <div class="gva-table-box">
       <div class="gva-btn-list">
@@ -38,16 +43,18 @@
             @keyup.enter.native="searchTask"
           />
           <el-button
-            class="bg-[#4773C5] text-gray-100 hover:bg-[#729cea] active:bg-[#729cea] active:transform active:!scale-90 active:!shadow-lg"
+            type="primary"
+            class=" text-gray-100 opacity-90 active:transform active:!scale-90 active:!shadow-lg"
             @click="searchTask"
           >查询</el-button>
           <el-button
-            class="bg-[#4773C5] text-gray-100 hover:bg-[#729cea] active:bg-[#729cea] active:transform active:!scale-90 active:!shadow-lg"
+            type="primary"
+            class=" text-gray-100 opacity-90 active:transform active:!scale-90 active:!shadow-lg"
             @click="
               () => {
                 openDialog('add');
                 RefreshAvailableConcurrency();
-                uploadPercentage = 0
+                uploadPercentage = 0;
               }
             "
           >添加任务</el-button>
@@ -56,27 +63,30 @@
         <el-Button
           class="bg-orange-400 text-gray-100"
           :disabled="multipleSelection.length == 0"
+          :class="multipleSelection.length == 0 ? 'opacity-50':''"
           @click="batchPause()"
         >
-          一键中止
+          一键暂停
         </el-Button>
-<!--        <el-Button-->
-<!--          class="bg-[#CFAB86] text-gray-100"-->
-<!--          :disabled="multipleSelection.length == 0"-->
-<!--          @click="batchRecover()"-->
-<!--        >-->
-<!--          一键恢复-->
-<!--        </el-Button>-->
+        <!--        <el-Button-->
+        <!--          class="bg-[#CFAB86] text-gray-100"-->
+        <!--          :disabled="multipleSelection.length == 0"-->
+        <!--          @click="batchRecover()"-->
+        <!--        >-->
+        <!--          一键恢复-->
+        <!--        </el-Button>-->
         <el-Button
           class="bg-red-400 text-gray-100"
           danger
           :disabled="multipleSelection.length == 0"
+          :class="multipleSelection.length == 0 ? 'opacity-50':''"
           @click="batchDelete()"
         >
           一键删除
         </el-Button>
         <el-Button
-          class="bg-[#4773C5] text-gray-100 hover:bg-[#729cea] active:bg-[#729cea] active:transform active:!scale-90 active:!shadow-lg"
+          type="info"
+          class="text-gray-100 opacity-95 active:transform active:!scale-90 active:!shadow-lg"
           @click="getTableData"
         >刷新一下</el-Button>
         <el-tooltip
@@ -86,11 +96,10 @@
           placement="top"
         >
           <el-Button
-            class="bg-[#28a745] text-white hover:bg-[#218838] active:bg-[#1e7e34] active:transform active:!scale-90 active:!shadow-lg ml-auto"
+            class="bg-[#28a745] opacity-90 text-white hover:bg-[#218838] active:bg-[#1e7e34] active:transform active:!scale-90 active:!shadow-lg ml-auto"
             @click="syncConcurrency"
           >同步线程配置</el-Button>
         </el-tooltip>
-
       </div>
 
       <el-table
@@ -111,71 +120,45 @@
           label="ID"
           width="60"
           prop="ID"
+          fixed="left"
         />
         <el-table-column
           v-if="userStore.userInfo.authorityId == 999"
           label="UID"
-          width="60"
+          width="50"
           prop="UserID"
+          show-overflow-tooltip
         />
         <el-table-column
           v-if="userStore.userInfo.authorityId == 999"
           label="昵称"
-          width="60"
+          min-width="60"
           prop="nick_name"
+          show-overflow-tooltip
         />
         <el-table-column
           v-if="userStore.userInfo.authorityId == 999"
           label="用户名"
           width="80"
           prop="user_name"
+          show-overflow-tooltip
         />
         <el-table-column
           align="left"
           label="任务名称"
-          min-width="120"
+          min-width="90"
           prop="taskName"
-        >
-          <template #default="scope">
-            <el-tooltip
-              class="item"
-              effect="dark"
-              :content="scope.row.taskName"
-              placement="top"
-            >
-              <div class="text-ellipsis">
-                {{
-                  scope.row.taskName.length > 6
-                    ? scope.row.taskName.substr(0, 6) + "..."
-                    : scope.row.taskName
-                }}
-              </div>
-            </el-tooltip>
-          </template>
-        </el-table-column>
+          show-overflow-tooltip
+          fixed="left"
+        />
         <el-table-column
           align="left"
           label="文件名称"
-          width="140"
+          min-width="140"
           prop="file_name"
-        >
-          <template #default="scope">
-            <el-tooltip
-              class="item"
-              effect="dark"
-              :content="scope.row.file_name"
-              placement="top"
-            >
-              <div class="text-ellipsis whitespace-nowrap">
-                {{
-                  scope.row.file_name.length > 10
-                    ? scope.row.file_name.substr(0, 10) + "..."
-                    : scope.row.file_name
-                }}
-              </div>
-            </el-tooltip>
-          </template>
-        </el-table-column>
+          show-overflow-tooltip
+          fixed="left"
+        />
 
         <el-table-column
           align="left"
@@ -186,6 +169,7 @@
             <el-tag
               :color="getStatusTag(row.status)"
               effect="dark"
+              class="px-2 text-xs opacity-80"
             >
               {{ getStatusButtonType(row.status, row) }}
             </el-tag>
@@ -323,9 +307,9 @@
             <!-- Button Group Container -->
             <div class="button-group">
               <el-button
-                type="warning"
+                type="danger"
                 link
-                :disabled="scope.row.status == 'Running'"
+                :disabled="scope.row.status == 'Running' && userStore.userInfo.authorityId !== 999"
                 @click="deleteTask(scope.row)"
               >删除</el-button>
               <!-- 更多操作 Dropdown -->
@@ -339,10 +323,10 @@
                 >更多操作</el-button>
                 <template #dropdown>
                   <el-dropdown-menu>
-<!--                    <el-dropdown-item-->
-<!--                      v-if="scope.row.status === 'Pause' && scope.row.totalNumber <= 200000"-->
-<!--                      @click.native="openRecover(scope.row)"-->
-<!--                    >恢复</el-dropdown-item>-->
+                    <!--                    <el-dropdown-item-->
+                    <!--                      v-if="scope.row.status === 'Pause' && scope.row.totalNumber <= 200000"-->
+                    <!--                      @click.native="openRecover(scope.row)"-->
+                    <!--                    >恢复</el-dropdown-item>-->
                     <el-dropdown-item
                       v-if="scope.row.status === 'Running'"
                       @click.native="openPause(scope.row)"
@@ -354,7 +338,7 @@
                       "
                     >什么都没有</el-dropdown-item>
                     <el-dropdown-item
-                      v-if="scope.row.normal_file_path !=''"
+                      v-if="scope.row.normal_file_path != ''"
                       @click="downloadNormal(scope.row)"
                     >下载正常账号</el-dropdown-item>
                     <el-dropdown-item
@@ -408,12 +392,14 @@
           <el-button
             type="danger"
             class="mt-5"
-            @click="()=>{
-              close()
-              if(form.filePath != ''){
-                // deleteFile(form.filePath)
+            @click="
+              () => {
+                close();
+                if (form.filePath != '') {
+                  // deleteFile(form.filePath)
+                }
               }
-            }"
+            "
           >
             <el-icon class="el-icon--left"><CircleCloseFilled /></el-icon>
             关闭
@@ -469,16 +455,21 @@
           ><Refresh /></el-icon>
         </el-form-item>
 
-
-        <el-form-item prop="file" class="relative">
+        <el-form-item
+          prop="file"
+          class="relative"
+        >
           <template #label>
             <div class="flex items-center">
               <el-tooltip
-                  effect="dark"
-                  content="为了最佳优化，请将手机号以.txt格式上传，并确保每行只包含一个手机号"
-                  placement="top"
+                effect="dark"
+                content="为了最佳优化，请将手机号以.txt格式上传，并确保每行只包含一个手机号"
+                placement="top"
               >
-                <el-icon style="margin-right: 4px" :size="12">
+                <el-icon
+                  style="margin-right: 4px"
+                  :size="12"
+                >
                   <Warning />
                 </el-icon>
               </el-tooltip>
@@ -486,26 +477,29 @@
             </div>
           </template>
           <el-upload
-              ref="uploadRef"
-              class="upload-demo w-full"
-              :file-list="fileList"
-              :on-change="handleUploadChange"
-              :auto-upload="false"
-              drag
+            ref="uploadRef"
+            class="upload-demo w-full"
+            :file-list="fileList"
+            :on-change="handleUploadChange"
+            :auto-upload="false"
+            accept=".txt"
+            show-file-list
+            drag
+            :on-remove="handleFileRemove"
+            :before-upload="handleFileRemove"
+            :on-exceed="handleFileRemove"
           >
             <template #trigger>
               <el-button class="bg-gray-100 rounded-none hover:text-">选择文件</el-button>
             </template>
-
           </el-upload>
           <el-progress
-              v-if="uploadPercentage > 0"
-              :percentage="uploadPercentage"
-              :color="customColors"
+            v-if="uploadPercentage > 0"
+            :percentage="uploadPercentage"
           />
         </el-form-item>
 
-<!--        <breakpoint-vue @uploadComplete="handleUploadComplete" @clearFile="handleClearFile"/>-->
+        <!--        <breakpoint-vue @uploadComplete="handleUploadComplete" @clearFile="handleClearFile"/>-->
 
         <el-form-item>
           <el-button
@@ -527,7 +521,6 @@
       />
     </el-dialog>
   </div>
-
 </template>
 
 <script setup>
@@ -544,16 +537,15 @@ import {
   pauseTask,
   recoverTask,
   SyncConcurrency,
-  UploadFile
+  UploadFile,
 } from '@/api/sieve'
-import {getAvailableConcurrency} from '@/api/user'
-import {onMounted, onUnmounted, reactive, ref} from 'vue'
-import {ElMessage, ElMessageBox} from 'element-plus'
-import {CircleCloseFilled} from '@element-plus/icons-vue'
-import WarningBar from '@/components/warningBar/warningBar.vue'
+import { getAvailableConcurrency } from '@/api/user'
+import { onMounted, onUnmounted, reactive, ref } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { CircleCloseFilled } from '@element-plus/icons-vue'
+import InfoBar from '@/components/infoBar/infoBar.vue'
 import dayjs from 'dayjs'
-import {useUserStore} from '@/pinia/modules/user'
-import breakpointVue from '@/view/example/breakpoint/breakpoint.vue'
+import { useUserStore } from '@/pinia/modules/user'
 
 const userStore = useUserStore()
 const loadingProgress = ref(0)
@@ -683,7 +675,7 @@ const getStatusButtonType = (status, row) => {
     case 'Pending':
       return '等待'
     case 'Success':
-      return '成功'
+      return '已完成'
     case 'Failed':
       return '失败'
     case 'Running':
@@ -696,15 +688,15 @@ const getStatusButtonType = (status, row) => {
         const totalProgress = Math.floor(
           (totalProcessed / Number(row.totalNumber)) * 100
         )
-        return `运行中 ( ${totalProgress}%)`
+        return `筛号中 ( ${totalProgress}%)`
       }
-      return '运行中'
+      return '筛号中'
     case 'Pause':
-      return '暂停'
+      return '已暂停'
     case 'Generating':
       return '文件生成中'
     case 'PartialSucceed':
-      return '部分文件生成成功'
+      return '部分文件生成已完成'
     case 'PhoneAdding':
       return '文件重制中'
     default:
@@ -718,10 +710,16 @@ const formRef = ref(null)
 const fileList = ref([])
 
 const handleUploadChange = (file, fileListUpdated) => {
-  fileList.value = fileListUpdated
-  if (fileListUpdated.length > 0) {
-    const selectedFile = fileListUpdated[0].raw
+  // 保证fileList只包含最新的一个文件
+  fileList.value = fileListUpdated.slice(-1)
+  if (fileList.value.length > 0) {
+    const selectedFile = fileList.value[0].raw
     if (selectedFile) {
+      // 验证文件类型是否为txt
+      if (selectedFile.type !== 'text/plain') {
+        ElMessage.error('文件类型错误，请上传txt文件')
+        return
+      }
       uploadFile(selectedFile)
     } else {
       console.error('没有要上传的文件')
@@ -731,6 +729,14 @@ const handleUploadChange = (file, fileListUpdated) => {
   }
 }
 
+const handleFileRemove = (file, fileListUpdated) => {
+  fileList.value.length = 0
+  // 更新文件列表
+  fileList.value = fileListUpdated
+  // 重置进度
+  uploadPercentage.value = 0
+  console.log('文件已移除')
+}
 
 const form = reactive({
   taskName: '',
@@ -810,9 +816,9 @@ const submitForm = async() => {
 
     // 根据响应结果处理
     if (response && response.code === 0) {
-      ElMessage.success('添加成功！')
+      ElMessage.success('添加已完成！')
 
-      // 如果响应成功，立即将进度条设置为100%
+      // 如果响应已完成，立即将进度条设置为100%
       clearInterval(intervalId)
       loadingProgress.value = 100
 
@@ -822,7 +828,7 @@ const submitForm = async() => {
         closeDialog()
 
         // 3秒后刷新列表
-        setTimeout(getTableData, 3000)
+        setTimeout(getTableData, 1000)
       }, 500)
     } else {
       // 如果响应失败，显示警告消息
@@ -840,11 +846,13 @@ const submitForm = async() => {
     setTimeout(() => {
       isShowProgress.value = false
       closeDialog()
-      ElMessage.warning('添加可能已经成功，但响应较慢，请稍后确认。')
+      ElMessage.warning('添加可能已经已完成，但响应较慢，请稍后确认。')
 
       // 提示用户手动刷新或联系客服
       setTimeout(() => {
-        ElMessage.info('如果未在表格数据中出现刚提交的任务，请手动刷新或联系客服。')
+        ElMessage.info(
+          '如果未在表格数据中出现刚提交的任务，请手动刷新或联系客服。'
+        )
       }, 2000)
     }, 500)
   } finally {
@@ -855,80 +863,87 @@ const submitForm = async() => {
   }
 }
 
-const uploadFile = async (file) => {
-  // 动态计算每块大小，根据文件大小调整
+const uploadFile = async(file) => {
   const calculateChunkSize = (fileSize) => {
-    if (fileSize <= 10 * 1024 * 1024) { // 文件大小 <= 10MB
-      return 1 * 1024 * 1024; // 每块大小 1MB
-    } else if (fileSize <= 100 * 1024 * 1024) { // 文件大小 <= 100MB
-      return 5 * 1024 * 1024; // 每块大小 5MB
+    if (fileSize <= 10 * 1024 * 1024) {
+      return 1 * 1024 * 1024
+    } else if (fileSize <= 100 * 1024 * 1024) {
+      return 5 * 1024 * 1024
     } else {
-      return 10 * 1024 * 1024; // 每块大小 10MB
+      return 10 * 1024 * 1024
     }
-  };
+  }
 
-  const chunkSize = calculateChunkSize(file.size);
-  console.log("文件已被分块总数", chunkSize)
-  const totalParts = Math.ceil(file.size / chunkSize);
-  const fileName = file.name;
-  let uploadSuccess = true; // 用于记录是否所有块都上传成功
+  const chunkSize = calculateChunkSize(file.size)
+  console.log('每块大小', chunkSize)
+  const totalParts = Math.ceil(file.size / chunkSize)
+  const fileName = file.name
+  let uploadSuccess = true
 
   // 初始化进度数组，每个块的初始进度为0
-  const partProgress = new Array(totalParts).fill(0);
+  const partProgress = new Array(totalParts).fill(0)
 
   // 更新总进度
   const updateTotalProgress = () => {
-    const totalProgress = partProgress.reduce((acc, curr) => acc + curr, 0) / totalParts;
-    console.log(`总进度: ${totalProgress}%`);
-    uploadPercentage.value = Math.round(totalProgress);
-  };
+    const totalProgress =
+      partProgress.reduce((acc, curr) => acc + curr, 0) / totalParts
+    console.log(`总进度: ${totalProgress}%`)
+    uploadPercentage.value = Math.round(totalProgress)
+  }
 
   for (let partNumber = 1; partNumber <= totalParts; partNumber++) {
-    const start = (partNumber - 1) * chunkSize;
-    const end = Math.min(file.size, start + chunkSize);
-    const blob = file.slice(start, end);
+    const start = (partNumber - 1) * chunkSize
+    const end = Math.min(file.size, start + chunkSize)
+    const blob = file.slice(start, end)
 
-    const formData = new FormData();
-    formData.append('file', blob);
-    formData.append('fileName', fileName);
-    formData.append('partNumber', partNumber.toString());
-    formData.append('totalParts', totalParts.toString());
+    const formData = new FormData()
+    formData.append('file', blob)
+    formData.append('fileName', fileName)
+    formData.append('partNumber', partNumber.toString())
+    formData.append('totalParts', totalParts.toString())
+
+    // 添加日志
+    console.log(
+      `上传块: ${partNumber}, fileName: ${fileName}, totalParts: ${totalParts}`
+    )
 
     try {
       const response = await UploadFile(formData, {
         onUploadProgress: (progressEvent) => {
           // 更新当前块的进度
-          const progress = Math.round((progressEvent.loaded / progressEvent.total) * 100);
-          console.log(`第 ${partNumber} 块进度: ${progress}%`);
-          partProgress[partNumber - 1] = progress;
-          updateTotalProgress();
-        }
-      });
+          const progress = Math.round(
+            (progressEvent.loaded / progressEvent.total) * 100
+          )
+          console.log(`第 ${partNumber} 块进度: ${progress}%`)
+          partProgress[partNumber - 1] = progress
+          updateTotalProgress()
+        },
+      })
 
       if (response && response.data) {
         if (partNumber === totalParts) {
-          form.filePath = response.data.filePath;
+          form.filePath = response.data.filePath
         }
       } else {
-        uploadSuccess = false;
-        ElMessage.error(`第 ${partNumber} 块上传失败`);
-        break;
+        uploadSuccess = false
+        ElMessage.error(`第 ${partNumber} 块上传失败`)
+        break
       }
     } catch (error) {
-      uploadSuccess = false;
-      ElMessage.error(`上传过程中出现错误: ${error}`);
-      break;
+      uploadSuccess = false
+      ElMessage.error(`上传过程中出现错误: ${error}`)
+      break
     }
   }
 
   // 所有块上传完成后，统一提示
   if (uploadSuccess) {
-    ElMessage.success('文件上传完成');
+    ElMessage.success('文件上传完成')
     form.fileName = fileName
   } else {
-    ElMessage.error('部分块上传失败，请重试');
+    ElMessage.error('部分块上传失败，请重试')
   }
-};
+}
 
 const resetForm = () => {
   // 如果 formRef 是有效的，重置表单字段
@@ -949,7 +964,7 @@ const syncConcurrency = async() => {
     // 调用重置线程数的接口
     const response = await SyncConcurrency()
 
-    // 根据接口返回的 code 判断是否成功
+    // 根据接口返回的 code 判断是否已完成
     if (response && response.code === 0) {
       ElMessage.success(response.msg)
     } else {
@@ -977,7 +992,7 @@ const openPause = (row) => {
       if (res.code === 0) {
         ElMessage({
           type: 'success',
-          message: '暂停成功',
+          message: '暂停已完成',
         })
         setTimeout(() => {
           getTableData()
@@ -1011,7 +1026,7 @@ const openRecover = (row) => {
         if (res.code === 0) {
           ElMessage({
             type: 'success',
-            message: `任务 "${row.taskName}" 恢复成功!`,
+            message: `任务 "${row.taskName}" 恢复已完成!`,
           })
           setTimeout(() => {
             getTableData()
@@ -1074,8 +1089,8 @@ const downloadFile = async(downloadFunc, row) => {
       document.body.removeChild(link)
       window.URL.revokeObjectURL(url)
 
-      // 下载成功提示
-      ElMessage.success('下载成功')
+      // 下载已完成提示
+      ElMessage.success('下载已完成')
     } else {
       ElMessage.error('下载失败：服务器未返回文件')
     }
@@ -1193,23 +1208,23 @@ const openDialog = (key) => {
 const getStatusTag = (status) => {
   switch (status) {
     case 'Init':
-      return 'gray'
+      return '#808080' // 灰色
     case 'Pending':
-      return '#fffdf1'
+      return '#FFD700' // 金色
     case 'Success':
-      return '#92c800'
+      return '#28a745' // 绿色
     case 'Failed':
-      return '#d72539'
+      return '#dc3545' // 红色
     case 'Running':
-      return '#88d0ff'
+      return '#17a2b8' // 青色
     case 'Pause':
-      return '#ff6d00'
-    case 'Generating' :
-      return '#88d0ff'
+      return '#ffa500' // 橙色
+    case 'Generating':
+      return '#17a2b8' // 青色
     case 'PartialSucceed':
-      return '#d72539'
+      return '#ffc107' // 黄色
     case 'PhoneAdding':
-      return '#88d0ff'
+      return '#6c757d' // 中灰色
     default:
       return ''
   }
@@ -1236,7 +1251,7 @@ const batchDelete = () => {
           // 调用删除任务的函数
           const res = await deleteSieveTask({ ID: row.ID })
           if (res.code === 0) {
-            ElMessage.success('任务删除成功')
+            ElMessage.success('任务删除已完成')
             if (tableData.value.length === 1 && page.value > 1) {
               page.value--
             }
@@ -1266,7 +1281,7 @@ const batchPause = () => {
           // 调用删除任务的函数
           const res = await pauseTask(row.ID)
           if (res.code === 0) {
-            ElMessage.success('任务暂停成功!')
+            ElMessage.success('任务暂停已完成!')
             if (tableData.value.length === 1 && page.value > 1) {
               page.value--
             }
@@ -1296,7 +1311,7 @@ const batchRecover = () => {
           // 调用删除任务的函数
           const res = await recoverTask(row.ID)
           if (res.code === 0) {
-            ElMessage.success('任务恢复成功!')
+            ElMessage.success('任务恢复已完成!')
             if (tableData.value.length === 1 && page.value > 1) {
               page.value--
             }
@@ -1315,20 +1330,35 @@ onMounted(() => {
     if (document.visibilityState === 'visible') {
       const taskStatusMap = new Map()
 
-      tableData.value.forEach(task => {
+      tableData.value.forEach((task) => {
         if (taskStatusMap.has(task.id)) {
-          if (task.status === 'Init' && taskStatusMap.get(task.id).createdAt + 60000 < Date.now()) {
-            taskStatusMap.set(task.id, { status: task.status, createdAt: Date.now() })
+          if (
+            task.status === 'Init' &&
+            taskStatusMap.get(task.id).createdAt + 60000 < Date.now()
+          ) {
+            taskStatusMap.set(task.id, {
+              status: task.status,
+              createdAt: Date.now(),
+            })
           }
         } else {
-          taskStatusMap.set(task.id, { status: task.status, createdAt: Date.now() })
+          taskStatusMap.set(task.id, {
+            status: task.status,
+            createdAt: Date.now(),
+          })
         }
       })
 
-      if (tableData.value.some(task =>
-        (task.status === 'Running' || task.status === 'Generating' || task.status === 'PhoneAdding') ||
-        (task.status === 'Init' && taskStatusMap.get(task.id).createdAt + 60000 >= Date.now())
-      )) {
+      if (
+        tableData.value.some(
+          (task) =>
+            task.status === 'Running' ||
+            task.status === 'Generating' ||
+            task.status === 'PhoneAdding' ||
+            (task.status === 'Init' &&
+              taskStatusMap.get(task.id).createdAt + 60000 >= Date.now())
+        )
+      ) {
         getTableData()
       }
     }
@@ -1338,21 +1368,6 @@ onMounted(() => {
     clearInterval(intervalId)
   })
 })
-
-const handleUploadComplete = (obj) => {
-  form.filePath = obj.path;
-  form.fileName = obj.name;
-  if(obj.path ==='' && obj.name !=="") {
-    form.filePath = "file/" + obj.name;
-  }
-}
-
-const handleClearFile = (filePath) => {
-  if(filePath !== "") {
-    // 删除文件
-    // deleteFile(filePath)
-  }
-}
 </script>
 
 <style lang="scss">

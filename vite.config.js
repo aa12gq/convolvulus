@@ -143,7 +143,7 @@ export default ({
       visualizer({
         emitFile: false,
         filename: 'stats.html',
-        open: true,
+        open: false,
         sourcemap: true
       }),
       GvaPositionServer(),

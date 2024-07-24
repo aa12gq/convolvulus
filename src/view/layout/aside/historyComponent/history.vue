@@ -1,38 +1,38 @@
 ﻿<template>
   <div class="router-history">
     <el-tabs
-  v-model="activeValue"
-  :closable="!(historys.length === 1 && $route.name === defaultRouter)"
-  type="card"
-  @contextmenu.prevent="openContextMenu($event)"
-  @tab-click="changeTab"
-  @tab-remove="removeTab"
->
-  <el-tab-pane
-    v-for="item in historys"
-    :key="name(item)"
-    :label="item.meta.title"
-    :name="name(item)"
-    :tab="item"
-    class="gva-tab"
-  >
-    <template #label>
-      <span
+      v-model="activeValue"
+      :closable="!(historys.length === 1 && $route.name === defaultRouter)"
+      type="card"
+      @contextmenu.prevent="openContextMenu($event)"
+      @tab-click="changeTab"
+      @tab-remove="removeTab"
+    >
+      <el-tab-pane
+        v-for="item in historys"
+        :key="name(item)"
+        :label="item.meta.title"
+        :name="name(item)"
         :tab="item"
-        :style="{
-          color: activeValue === name(item) ? userStore.activeColor : '#333',
-        }"
-      ><i
-         class="dot"
-         :style="{
-           backgroundColor:
-             activeValue === name(item) ? userStore.activeColor : '#ddd',
-         }"
-       />
-        {{ fmtTitle(item.meta.title, item) }}</span>
-    </template>
-  </el-tab-pane>
-</el-tabs>
+        class="gva-tab"
+      >
+        <template #label>
+          <span
+            :tab="item"
+            :style="{
+              color: activeValue === name(item) ? userStore.activeColor : '#333',
+            }"
+          ><i
+             class="dot"
+             :style="{
+               backgroundColor:
+                 activeValue === name(item) ? userStore.activeColor : '#ddd',
+             }"
+           />
+            {{ fmtTitle(item.meta.title, item) }}</span>
+        </template>
+      </el-tab-pane>
+    </el-tabs>
 
     <!--自定义右键菜单html代码-->
     <ul
@@ -47,7 +47,6 @@
     </ul>
   </div>
 </template>
-
 
 <script setup>
 import { emitter } from '@/utils/bus.js'
@@ -361,9 +360,8 @@ onUnmounted(() => {
   cursor: pointer;
 }
 
-
 .el-tabs--card>.el-tabs__header {
-  background-color: #f5f3f3; // 设置标签页头部背景色
+  background-color: #fff; // 设置标签页头部背景色
 }
 
 .gva-tab {
@@ -385,7 +383,7 @@ onUnmounted(() => {
       color: #f56c6c; // 鼠标悬停时的关闭图标颜色
     }
   }
-  
+
   .dot {
     margin-right: 4px; // 调整小圆点的右外边距
     // 其他样式根据需要进行调整...
