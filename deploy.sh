@@ -3,7 +3,7 @@
 # 退出脚本，如果任何命令返回非零退出状态
 set -e
 
-REMOTE_HOST=91.208.104.190
+REMOTE_HOST=192.236.160.133
 REMOTE_PATH=/home/pieve-ui/
 LOCAL_BUILD_COMMAND="pnpm run build"
 LOCAL_BUILD_PATH=dist

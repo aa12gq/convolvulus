@@ -31,11 +31,6 @@ defineOptions({
   border-radius: 10px !important;
   overflow: hidden !important;
 }
-.el-tag{
-  color: white !important;
-  border: none !important;
-  border-radius: 2px !important;
-  overflow: hidden !important;
-}
+
 
 </style>
