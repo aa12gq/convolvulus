@@ -31,13 +31,7 @@
         </div>
 
         <el-Button class="bg-orange-400 text-gray-100" :disabled="multipleSelection.length == 0" :class="multipleSelection.length == 0 ? 'opacity-50' : ''" @click="batchPause()">一键暂停</el-Button>
-        <!--        <el-Button-->
-        <!--          class="bg-[#CFAB86] text-gray-100"-->
-        <!--          :disabled="multipleSelection.length == 0"-->
-        <!--          @click="batchRecover()"-->
-        <!--        >-->
-        <!--          一键恢复-->
-        <!--        </el-Button>-->
+        <el-Button class="bg-[#CFAB86] text-gray-100" :disabled="multipleSelection.length == 0" @click="batchRecover()">一键恢复</el-Button>
         <el-Button class="bg-red-400 text-gray-100" danger :disabled="multipleSelection.length == 0" :class="multipleSelection.length == 0 ? 'opacity-50' : ''" @click="batchDelete()">
           一键删除
         </el-Button>
@@ -69,7 +63,7 @@
 
         <el-table-column align="left" label="状态" min-width="130">
           <template #default="{ row }">
-            <el-tag :color="getStatusTag(row.status)" effect="dark" class="px-2 text-xs opacity-80  border-none overflow-hidden rounded-[2px]">
+            <el-tag :color="getStatusTag(row.status)" effect="dark" class="px-2 text-xs opacity-80 border-none overflow-hidden rounded-[2px]">
               {{ getStatusButtonType(row.status, row) }}
             </el-tag>
           </template>
@@ -147,10 +141,7 @@
                 <el-button class="button-with-icon-right ml-3 text-gray-500" link>更多操作</el-button>
                 <template #dropdown>
                   <el-dropdown-menu>
-                    <!--                    <el-dropdown-item-->
-                    <!--                      v-if="scope.row.status === 'Pause' && scope.row.totalNumber <= 200000"-->
-                    <!--                      @click.native="openRecover(scope.row)"-->
-                    <!--                    >恢复</el-dropdown-item>-->
+                    <el-dropdown-item v-if="scope.row.status === 'Pause' && scope.row.totalNumber <= 200000" @click.native="openRecover(scope.row)">恢复</el-dropdown-item>
                     <el-dropdown-item v-if="scope.row.status === 'Running'" @click.native="openPause(scope.row)">暂停</el-dropdown-item>
                     <el-dropdown-item v-if="scope.row.nonDisabledAccounts > 0 && scope.row.DisabledAccounts > 0">什么都没有</el-dropdown-item>
                     <el-dropdown-item v-if="scope.row.normal_file_path != ''" @click="downloadNormal(scope.row)">下载正常账号</el-dropdown-item>
