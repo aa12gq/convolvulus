@@ -29,7 +29,6 @@
             添加任务
           </el-button>
         </div>
-
         <el-Button class="bg-orange-400 text-gray-100" :disabled="multipleSelection.length == 0" :class="multipleSelection.length == 0 ? 'opacity-50' : ''" @click="batchPause()">一键暂停</el-Button>
         <el-Button class="bg-[#CFAB86] text-gray-100" :disabled="multipleSelection.length == 0" @click="batchRecover()">一键恢复</el-Button>
         <el-Button class="bg-red-400 text-gray-100" danger :disabled="multipleSelection.length == 0" :class="multipleSelection.length == 0 ? 'opacity-50' : ''" @click="batchDelete()">
@@ -131,18 +130,37 @@
             {{ row.status === 'Running' ? formatDuration(dayjs().diff(dayjs(row.updatedAt), 'second')) : formatDuration(dayjs(row.updatedAt).diff(dayjs(row.createdAt), 'second')) }}
           </template>
         </el-table-column>
-        <el-table-column align="left" label="操作" width="150" fixed="right">
+        <el-table-column align="left" label="操作" width="180" fixed="right">
           <template #default="scope">
             <!-- Button Group Container -->
             <div class="button-group">
-              <el-button type="danger" link :disabled="scope.row.status == 'Running' && userStore.userInfo.authorityId !== 999" @click="deleteTask(scope.row)">删除</el-button>
+              <el-button type="danger" link v-if="scope.row.status !== 'Running' || userStore.userInfo.authorityId === 999" @click="deleteTask(scope.row)">删除</el-button>
+              <el-button
+                type="warning"
+                link
+                v-if="
+                  scope.row.status == 'Running' &&
+                  (scope.row.totalNumber > 0
+                    ? Math.floor(((Number(scope.row.nonDisabledAccounts) + Number(scope.row.disabledAccounts) + Number(scope.row.invalidAccounts)) / Number(scope.row.totalNumber)) * 100) < 90
+                    : true)
+                "
+                @click.native="openPause(scope.row)"
+              >
+                暂停
+              </el-button>
+              <el-button
+                type="primary"
+                link
+                v-if="scope.row.status == 'Pause'"
+                @click.native="openRecover(scope.row)"
+              >
+                恢复
+              </el-button>
               <!-- 更多操作 Dropdown -->
               <el-dropdown trigger="click" class="el-button-like !text-[black]">
                 <el-button class="button-with-icon-right ml-3 text-gray-500" link>更多操作</el-button>
                 <template #dropdown>
                   <el-dropdown-menu>
-                    <el-dropdown-item v-if="scope.row.status === 'Pause' && scope.row.totalNumber <= 200000" @click.native="openRecover(scope.row)">恢复</el-dropdown-item>
-                    <el-dropdown-item v-if="scope.row.status === 'Running'" @click.native="openPause(scope.row)">暂停</el-dropdown-item>
                     <el-dropdown-item v-if="scope.row.nonDisabledAccounts > 0 && scope.row.DisabledAccounts > 0">什么都没有</el-dropdown-item>
                     <el-dropdown-item v-if="scope.row.normal_file_path != ''" @click="downloadNormal(scope.row)">下载正常账号</el-dropdown-item>
                     <el-dropdown-item v-if="scope.row.disabled_file_path != ''" @click="downloadDisable(scope.row)">下载封禁账号</el-dropdown-item>
@@ -354,7 +372,6 @@ const getTableData = async (sortProp, sortOrder) => {
   if (table.code === 0) {
     setTimeout(() => {
       tableData.value = table.data.list;
-      console.log(table.data.list);
     }, 100);
     total.value = table.data.total;
     page.value = table.data.page;
@@ -459,8 +476,6 @@ const handleUploadChange = (file, fileListUpdated) => {
     } else {
       console.error('没有要上传的文件');
     }
-  } else {
-    console.log('没有选择文件');
   }
 };
 
@@ -470,7 +485,6 @@ const handleFileRemove = (file, fileListUpdated) => {
   fileList.value = fileListUpdated;
   // 重置进度
   uploadPercentage.value = 0;
-  console.log('文件已移除');
 };
 
 const form = reactive({
@@ -553,7 +567,6 @@ const submitForm = async () => {
     ElMessage.info('正在为您提交...');
     // 发送请求
     const response = await createSieveTask(formData);
-    console.log('response', response);
 
     // 根据响应结果处理
     if (response && response.code === 0) {
@@ -567,9 +580,7 @@ const submitForm = async () => {
       setTimeout(() => {
         isShowProgress.value = false;
         closeDialog();
-
-        // 3秒后刷新列表
-        setTimeout(getTableData, 1000);
+        getTableData();
       }, 500);
     } else {
       // 如果响应失败，显示警告消息
@@ -614,7 +625,6 @@ const uploadFile = async file => {
   };
 
   const chunkSize = calculateChunkSize(file.size);
-  console.log('每块大小', chunkSize);
   const totalParts = Math.ceil(file.size / chunkSize);
   const fileName = file.name;
   let uploadSuccess = true;
@@ -625,7 +635,6 @@ const uploadFile = async file => {
   // 更新总进度
   const updateTotalProgress = () => {
     const totalProgress = partProgress.reduce((acc, curr) => acc + curr, 0) / totalParts;
-    console.log(`总进度: ${totalProgress}%`);
     uploadPercentage.value = Math.round(totalProgress);
   };
 
@@ -639,16 +648,11 @@ const uploadFile = async file => {
     formData.append('fileName', fileName);
     formData.append('partNumber', partNumber.toString());
     formData.append('totalParts', totalParts.toString());
-
-    // 添加日志
-    console.log(`上传块: ${partNumber}, fileName: ${fileName}, totalParts: ${totalParts}`);
-
     try {
       const response = await UploadFile(formData, {
         onUploadProgress: progressEvent => {
           // 更新当前块的进度
           const progress = Math.round((progressEvent.loaded / progressEvent.total) * 100);
-          console.log(`第 ${partNumber} 块进度: ${progress}%`);
           partProgress[partNumber - 1] = progress;
           updateTotalProgress();
         },
@@ -723,7 +727,7 @@ const openPause = row => {
       if (res.code === 0) {
         ElMessage({
           type: 'success',
-          message: '暂停已完成',
+          message: '已发送暂停信号',
         });
         setTimeout(() => {
           getTableData();
@@ -753,15 +757,14 @@ const openRecover = row => {
     .then(async () => {
       try {
         const res = await recoverTask(row.ID);
-        console.log('测试', res);
         if (res.code === 0) {
           ElMessage({
             type: 'success',
-            message: `任务 "${row.taskName}" 恢复已完成!`,
+            message: `任务 "${row.taskName}" 已发送恢复信号`,
           });
           setTimeout(() => {
             getTableData();
-          }, 3000);
+          }, 500);
         } else {
           ElMessage({
             type: 'error',
@@ -804,8 +807,6 @@ const downloadFile = async (downloadFunc, row) => {
           fileName = decodeURIComponent(filenameMatch[1]);
         }
       }
-
-      console.log(`开始下载 ${fileName}`, response);
       const blob = new Blob([response.data], { type: 'text/plain' });
 
       // 创建下载链接并模拟点击进行下载
@@ -1074,7 +1075,7 @@ onMounted(() => {
         getTableData();
       }
     }
-  }, 10000);
+  }, 6000);
 
   onUnmounted(() => {
     clearInterval(intervalId);
@@ -1093,7 +1094,6 @@ const refreshProxyInfoList = async () => {
   if (result.code === 0 && Array.isArray(result.data.list)) {
     ProxyInfoList.value = [];
     setTimeout(() => {
-      console.log(result.data.list);
       ProxyInfoList.value = result.data.list;
     }, 100);
   }

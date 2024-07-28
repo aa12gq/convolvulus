@@ -264,8 +264,11 @@ onMounted(() => {
   emitter.emit('mobile', isMobile.value)
   emitter.on('reload', reload)
   emitter.on('showLoading', () => {
-    loadingFlag.value = true
-  })
+    loadingFlag.value = true;
+    setTimeout(() => {
+      loadingFlag.value = false;
+    }, 3000); // 三秒后自动关闭加载提示
+  });
   emitter.on('closeLoading', () => {
     loadingFlag.value = false
   })
